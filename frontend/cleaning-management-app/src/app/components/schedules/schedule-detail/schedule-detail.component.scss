@@ -1,0 +1,223 @@
+.schedule-detail-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .detail-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding: 24px;
+  }
+}
+
+.form-grid {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid #e9ecef;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+mat-form-field {
+  width: 100%;
+
+  &.mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      border-radius: 8px;
+    }
+  }
+}
+
+mat-dialog-content {
+  min-width: 700px;
+  max-width: 900px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0 !important;
+}
+
+mat-dialog-title {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: 0 !important;
+  padding: 20px 24px !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+mat-dialog-actions {
+  padding: 20px 24px;
+  margin-bottom: 0;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+
+  button {
+    margin-left: 12px;
+    min-width: 100px;
+
+    &.mat-raised-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+      &:hover {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        background: #ccc;
+        color: #666;
+        box-shadow: none;
+        transform: none;
+      }
+    }
+
+    &.mat-button {
+      color: #666;
+
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+  }
+}
+
+// Enhanced form field styling
+::ng-deep {
+  .mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      border-radius: 8px;
+      border-width: 1px;
+    }
+
+    &.mat-focused .mat-form-field-outline-thick {
+      border-color: #667eea;
+      border-width: 2px;
+    }
+
+    .mat-form-field-label {
+      color: #555;
+    }
+
+    &.mat-focused .mat-form-field-label {
+      color: #667eea;
+    }
+  }
+
+  .mat-select-panel {
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .mat-option {
+    &:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    &.mat-selected {
+      background: rgba(102, 126, 234, 0.2);
+    }
+  }
+}
+
+// Manual time input styling
+.mat-form-field {
+  .mat-icon[matsuffix] {
+    color: #667eea;
+    pointer-events: none; // Make icon non-clickable since it's just decorative
+  }
+
+  input[formControlName="startTime"],
+  input[formControlName="endTime"] {
+    font-family: "Roboto Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 1px;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.4);
+      font-family: "Roboto Mono", monospace;
+    }
+
+    &:focus {
+      background: rgba(102, 126, 234, 0.02);
+    }
+  }
+}
+
+// Enhanced validation styling
+::ng-deep {
+  .mat-form-field.ng-invalid.ng-touched {
+    .mat-form-field-outline-thick {
+      border-color: #f44336;
+    }
+
+    .mat-icon[matsuffix] {
+      color: #f44336;
+    }
+  }
+
+  .mat-form-field.ng-valid.ng-touched {
+    .mat-form-field-outline-thick {
+      border-color: #4caf50;
+    }
+
+    .mat-icon[matsuffix] {
+      color: #4caf50;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  mat-dialog-content {
+    min-width: auto;
+    max-width: 100vw;
+  }
+
+  mat-dialog-title {
+    font-size: 1.25rem;
+    padding: 16px 20px !important;
+  }
+
+  mat-dialog-actions {
+    padding: 16px 20px;
+
+    button {
+      min-width: 80px;
+      margin-left: 8px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  mat-dialog-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      margin: 4px 0;
+      width: 100%;
+    }
+  }
+}

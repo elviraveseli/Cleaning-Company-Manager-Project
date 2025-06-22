@@ -1,0 +1,107 @@
+<div class="app-shell" *ngIf="isAuthenticated$ | async; else loginView">
+  <mat-toolbar color="primary" class="toolbar">
+    <button mat-icon-button (click)="sidenav.toggle()" class="menu-button">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="app-title">{{ title }}</span>
+    <span class="spacer"></span>
+    <button
+      mat-icon-button
+      [matMenuTriggerFor]="userMenu"
+      class="user-menu-button"
+    >
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header" *ngIf="currentUser$ | async as user">
+        <mat-icon class="user-avatar">account_circle</mat-icon>
+        <div class="user-info">
+          <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+          <div class="user-role">{{ user.role | titlecase }}</div>
+        </div>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item>
+        <mat-icon>person</mat-icon>
+        <span>Profile</span>
+      </button>
+      <button mat-menu-item>
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidenav mode="side" opened class="sidenav">
+      <mat-nav-list>
+        <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+          <mat-icon matListItemIcon>dashboard</mat-icon>
+          <span matListItemTitle>Dashboard</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Human Resources</h3>
+        <a mat-list-item routerLink="/employees" routerLinkActive="active">
+          <mat-icon matListItemIcon>people</mat-icon>
+          <span matListItemTitle>Employees</span>
+        </a>
+        <a
+          mat-list-item
+          routerLink="/employee-contracts"
+          routerLinkActive="active"
+        >
+          <mat-icon matListItemIcon>description</mat-icon>
+          <span matListItemTitle>Employee Contracts</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Operations</h3>
+        <a mat-list-item routerLink="/objects" routerLinkActive="active">
+          <mat-icon matListItemIcon>business</mat-icon>
+          <span matListItemTitle>Objects</span>
+        </a>
+        <a mat-list-item routerLink="/customers" routerLinkActive="active">
+          <mat-icon matListItemIcon>people</mat-icon>
+          <span matListItemTitle>Customers</span>
+        </a>
+        <a
+          mat-list-item
+          routerLink="/customer-contracts"
+          routerLinkActive="active"
+        >
+          <mat-icon matListItemIcon>assignment</mat-icon>
+          <span matListItemTitle>Customer Contracts</span>
+        </a>
+        <a mat-list-item routerLink="/schedules" routerLinkActive="active">
+          <mat-icon matListItemIcon>schedule</mat-icon>
+          <span matListItemTitle>Schedules</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Finance</h3>
+        <a mat-list-item routerLink="/invoices" routerLinkActive="active">
+          <mat-icon matListItemIcon>receipt</mat-icon>
+          <span matListItemTitle>Invoices</span>
+        </a>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="main-content">
+      <router-outlet></router-outlet>
+      <app-footer></app-footer>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
+
+<ng-template #loginView>
+  <router-outlet></router-outlet>
+</ng-template>

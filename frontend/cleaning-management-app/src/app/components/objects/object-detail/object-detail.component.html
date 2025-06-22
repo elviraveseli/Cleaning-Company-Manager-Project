@@ -1,0 +1,320 @@
+<div class="object-detail-container">
+  <div *ngIf="!loading && !error && object" class="detail-content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="breadcrumb">
+        <button class="back-btn" (click)="goBack()">
+          <i class="material-icons">arrow_back</i>
+          <span>Back to Objects</span>
+        </button>
+      </div>
+
+      <div class="object-header">
+        <div class="object-info">
+          <div class="object-avatar">
+            <i class="material-icons">{{ getTypeIcon(object.type) }}</i>
+          </div>
+          <div class="object-details">
+            <h1 class="object-name">{{ object.name }}</h1>
+            <div class="object-meta">
+              <span class="object-type">{{ object.type }}</span>
+              <span class="separator">•</span>
+              <span class="object-location"
+                >{{ object.address.city }},
+                {{ object.address.municipality }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="object-status">
+          <div class="status-badge" [class]="getStatusColor(object.status)">
+            <i class="material-icons">{{ getStatusIcon(object.status) }}</i>
+            <span>{{ object.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button
+        class="action-btn primary"
+        (click)="editObject()"
+        [disabled]="!canEdit()"
+      >
+        <i class="material-icons">edit</i>
+        <span>Edit Object</span>
+      </button>
+
+      <button
+        class="action-btn secondary"
+        (click)="callContact()"
+        *ngIf="object.contactPerson.phone"
+      >
+        <i class="material-icons">phone</i>
+        <span>Call</span>
+      </button>
+
+      <button
+        class="action-btn secondary"
+        (click)="emailContact()"
+        *ngIf="object.contactPerson.email"
+      >
+        <i class="material-icons">email</i>
+        <span>Email</span>
+      </button>
+
+      <button class="action-btn secondary" (click)="openMaps()">
+        <i class="material-icons">map</i>
+        <span>View Map</span>
+      </button>
+
+      <button class="action-btn secondary" (click)="createSchedule()">
+        <i class="material-icons">schedule</i>
+        <span>Create Schedule</span>
+      </button>
+
+      <button class="action-btn secondary" (click)="viewSchedules()">
+        <i class="material-icons">calendar_today</i>
+        <span>View Schedules</span>
+      </button>
+
+      <button class="action-btn secondary" (click)="createContract()">
+        <i class="material-icons">description</i>
+        <span>Create Contract</span>
+      </button>
+
+      <div class="action-dropdown">
+        <button class="action-btn secondary dropdown-toggle">
+          <i class="material-icons">more_vert</i>
+          <span>More</span>
+        </button>
+        <div class="dropdown-menu">
+          <button (click)="duplicateObject()">
+            <i class="material-icons">content_copy</i>
+            <span>Duplicate</span>
+          </button>
+          <button (click)="viewContracts()">
+            <i class="material-icons">assignment</i>
+            <span>View Contracts</span>
+          </button>
+          <hr />
+          <button
+            (click)="deleteObject()"
+            [disabled]="!canDelete()"
+            class="danger"
+          >
+            <i class="material-icons">delete</i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information Cards -->
+    <div class="info-grid">
+      <!-- Basic Information -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3>Basic Information</h3>
+          <i class="material-icons">info</i>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <span class="label">Object Name:</span>
+            <span class="value">{{ object.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Type:</span>
+            <span class="value">{{ object.type }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span>
+            <span
+              class="value status-value"
+              [class]="getStatusColor(object.status)"
+            >
+              <i class="material-icons">{{ getStatusIcon(object.status) }}</i>
+              {{ object.status }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Size:</span>
+            <span class="value">{{ formatArea(object.size) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Floors:</span>
+            <span class="value">{{ object.floors }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Rooms:</span>
+            <span class="value">{{ object.rooms }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3>Address</h3>
+          <i class="material-icons">location_on</i>
+        </div>
+        <div class="card-content">
+          <div class="address-display">
+            <div class="street">{{ object.address.street }}</div>
+            <div class="city-line">
+              {{ object.address.city
+              }}<span *ngIf="object.address.municipality"
+                >, {{ object.address.municipality }}</span
+              >
+
+              >
+            </div>
+            <div class="country" *ngIf="object.address.country">
+              {{ object.address.country }}
+            </div>
+          </div>
+          <button class="map-btn" (click)="openMaps()">
+            <i class="material-icons">map</i>
+            <span>View on Map</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3>Contact Person</h3>
+          <i class="material-icons">person</i>
+        </div>
+        <div class="card-content">
+          <div class="contact-display">
+            <div class="contact-avatar">
+              {{ getInitials(object.contactPerson.name) }}
+            </div>
+            <div class="contact-details">
+              <div class="contact-name">{{ object.contactPerson.name }}</div>
+              <div class="contact-phone">
+                <i class="material-icons">phone</i>
+                <span>{{ object.contactPerson.phone }}</span>
+                <button class="contact-action" (click)="callContact()">
+                  <i class="material-icons">call</i>
+                </button>
+              </div>
+              <div class="contact-email" *ngIf="object.contactPerson.email">
+                <i class="material-icons">email</i>
+                <span>{{ object.contactPerson.email }}</span>
+                <button class="contact-action" (click)="emailContact()">
+                  <i class="material-icons">send</i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cleaning Information -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3>Cleaning Details</h3>
+          <i class="material-icons">cleaning_services</i>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <span class="label">Frequency:</span>
+            <span class="value">{{ object.cleaningFrequency }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Estimated Time:</span>
+            <span class="value">{{ object.estimatedCleaningTime }} hours</span>
+          </div>
+          <div class="info-row" *ngIf="hasSpecialRequirements()">
+            <span class="label">Special Requirements:</span>
+            <div class="requirements-list">
+              <span
+                *ngFor="let requirement of object.specialRequirements"
+                class="requirement-tag"
+              >
+                {{ requirement }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="info-card full-width" *ngIf="object.notes">
+        <div class="card-header">
+          <h3>Notes</h3>
+          <i class="material-icons">note</i>
+        </div>
+        <div class="card-content">
+          <div class="notes-content">{{ object.notes }}</div>
+        </div>
+      </div>
+
+      <!-- Photos -->
+      <div class="info-card full-width" *ngIf="hasPhotos()">
+        <div class="card-header">
+          <h3>Photos</h3>
+          <i class="material-icons">photo_library</i>
+        </div>
+        <div class="card-content">
+          <div class="photos-grid">
+            <div *ngFor="let photo of object.photos" class="photo-item">
+              <div class="photo-placeholder">
+                <i class="material-icons">image</i>
+                <span>{{ photo.fileName }}</span>
+              </div>
+              <div class="photo-date">{{ formatDate(photo.uploadDate) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Information -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3>System Information</h3>
+          <i class="material-icons">settings</i>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <span class="label">Created:</span>
+            <span class="value">{{ formatDateTime(object.createdAt) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Last Updated:</span>
+            <span class="value">{{ formatDateTime(object.updatedAt) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Object ID:</span>
+            <span class="value object-id">{{ object._id }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="material-icons spinning">refresh</i>
+      <span>Loading object details...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error">
+    <div class="error-content">
+      <i class="material-icons">error</i>
+      <h3>Error Loading Object</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+        <span>Back to Objects</span>
+      </button>
+    </div>
+  </div>
+</div>

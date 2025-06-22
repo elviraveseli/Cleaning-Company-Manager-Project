@@ -1,0 +1,424 @@
+<div class="contract-detail-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <button
+          mat-icon-button
+          (click)="goBack()"
+          class="back-btn"
+          matTooltip="Back to Contracts"
+        >
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="header-text">
+          <h1>Contract Details</h1>
+          <p *ngIf="employee">
+            {{ employee.firstName }} {{ employee.lastName }}
+          </p>
+        </div>
+      </div>
+      <div class="header-actions" *ngIf="contract && employee && !isLoading">
+        <div class="status-display">
+          <span
+            class="status-badge"
+            [ngClass]="getStatusClass(contract.status)"
+          >
+            <mat-icon class="status-icon">{{
+              getStatusIcon(contract.status)
+            }}</mat-icon>
+            {{ contract.status }}
+          </span>
+        </div>
+        <div class="action-buttons">
+          <button
+            mat-stroked-button
+            (click)="printContract()"
+            class="print-btn"
+          >
+            <mat-icon>print</mat-icon>
+            Print
+          </button>
+          <button mat-stroked-button (click)="editContract()" class="edit-btn">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button
+            mat-stroked-button
+            *ngIf="contract.status === 'Terminated'"
+            (click)="renewContract()"
+            class="renew-btn"
+          >
+            <mat-icon>refresh</mat-icon>
+            Renew
+          </button>
+          <button
+            mat-stroked-button
+            *ngIf="contract.status === 'Active'"
+            (click)="terminateContract()"
+            class="terminate-btn"
+          >
+            <mat-icon>cancel</mat-icon>
+            Terminate
+          </button>
+          <button
+            mat-stroked-button
+            color="warn"
+            (click)="deleteContract()"
+            class="delete-btn"
+          >
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading contract details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error && !isLoading">
+    <div class="error-content">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2>Unable to Load Contract</h2>
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Contracts
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div
+    class="page-content"
+    *ngIf="!isLoading && !error && contract && employee"
+  >
+    <!-- Employee Summary Card -->
+    <mat-card class="employee-summary-card">
+      <mat-card-content>
+        <div class="employee-summary">
+          <div class="employee-avatar">
+            {{ getEmployeeInitials() }}
+          </div>
+          <div class="employee-details">
+            <h2>{{ employee.firstName }} {{ employee.lastName }}</h2>
+            <div class="employee-meta">
+              <div class="meta-item">
+                <mat-icon>email</mat-icon>
+                <span>{{ employee.email }}</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon>phone</mat-icon>
+                <span>{{ employee.phone }}</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon>work</mat-icon>
+                <span>{{ employee.position }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="contract-summary">
+            <div class="summary-item">
+              <span class="label">Contract ID</span>
+              <span class="value">#{{ contract._id.slice(-8) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Duration</span>
+              <span class="value">{{ getContractDuration() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Type</span>
+              <span class="value">{{ contract.contractType }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Contract Details Grid -->
+    <div class="details-grid">
+      <!-- Basic Information -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>description</mat-icon>
+            Contract Information
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="label">Contract Type</span>
+              <span class="value">{{ contract.contractType }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Start Date</span>
+              <span class="value">{{
+                contract.startDate | date : "fullDate"
+              }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">End Date</span>
+              <span class="value">{{
+                contract.endDate
+                  ? (contract.endDate | date : "fullDate")
+                  : "Ongoing"
+              }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Status</span>
+              <span class="value">
+                <span
+                  class="status-badge"
+                  [ngClass]="getStatusClass(contract.status)"
+                >
+                  <mat-icon class="status-icon">{{
+                    getStatusIcon(contract.status)
+                  }}</mat-icon>
+                  {{ contract.status }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Compensation -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>euro</mat-icon>
+            Compensation
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="label">Salary</span>
+              <span class="value salary-amount">{{
+                contract.salary | currency : "EUR" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Payment Frequency</span>
+              <span class="value">{{ contract.paymentFrequency }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Working Hours -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>schedule</mat-icon>
+            Working Hours
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="label">Weekly Hours</span>
+              <span class="value"
+                >{{ contract.workingHours.weeklyHours }} hours</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="label">Schedule Type</span>
+              <span class="value">{{
+                contract.workingHours.scheduleType
+              }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Leave Entitlement -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>event_available</mat-icon>
+            Leave Entitlement
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="label">Annual Leave</span>
+              <span class="value"
+                >{{ contract.leaveEntitlement.annualLeave }} days</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="label">Sick Leave</span>
+              <span class="value"
+                >{{ contract.leaveEntitlement.sickLeave }} days</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="label">Paid Holidays</span>
+              <span class="value"
+                >{{ contract.leaveEntitlement.paidHolidays }} days</span
+              >
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Benefits Section -->
+    <mat-card
+      class="detail-card full-width"
+      *ngIf="contract.benefits.length > 0"
+    >
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>favorite</mat-icon>
+          Benefits Package
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="benefits-container">
+          <mat-chip-set>
+            <mat-chip
+              *ngFor="let benefit of contract.benefits"
+              class="benefit-chip"
+            >
+              <mat-icon matChipAvatar>check_circle</mat-icon>
+              {{ benefit }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Probation Period -->
+    <mat-card class="detail-card full-width" *ngIf="contract.probationPeriod">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>hourglass_empty</mat-icon>
+          Probation Period
+          <span class="probation-status" [class.active]="isProbationActive()">
+            {{ isProbationActive() ? "Active" : "Completed" }}
+          </span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-group">
+          <div class="info-item">
+            <span class="label">Duration</span>
+            <span class="value"
+              >{{ contract.probationPeriod.duration }} months</span
+            >
+          </div>
+          <div class="info-item">
+            <span class="label">End Date</span>
+            <span class="value">{{
+              contract.probationPeriod.endDate | date : "fullDate"
+            }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Documents -->
+    <mat-card
+      class="detail-card full-width"
+      *ngIf="contract.documents.length > 0"
+    >
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>folder</mat-icon>
+          Contract Documents
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="documents-grid">
+          <div class="document-item" *ngFor="let doc of contract.documents">
+            <div class="document-icon">
+              <mat-icon>description</mat-icon>
+            </div>
+            <div class="document-info">
+              <div class="document-name">{{ doc.name }}</div>
+              <div class="document-meta">
+                <span class="document-type">{{ doc.type }}</span>
+                <span class="document-date">{{
+                  doc.uploadDate | date : "mediumDate"
+                }}</span>
+              </div>
+            </div>
+            <button
+              mat-icon-button
+              (click)="downloadDocument(doc)"
+              class="download-btn"
+              matTooltip="Download"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Terms & Conditions -->
+    <mat-card class="detail-card full-width" *ngIf="contract.terms.length > 0">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>gavel</mat-icon>
+          Terms & Conditions
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="terms-list">
+          <div
+            class="term-item"
+            *ngFor="let term of contract.terms; let i = index"
+          >
+            <div class="term-number">{{ i + 1 }}</div>
+            <div class="term-text">{{ term }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Termination Details -->
+    <mat-card
+      class="detail-card full-width termination-card"
+      *ngIf="contract.terminationDetails"
+    >
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>cancel</mat-icon>
+          Termination Details
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-group">
+          <div class="info-item">
+            <span class="label">Termination Date</span>
+            <span class="value">{{
+              contract.terminationDetails.date | date : "fullDate"
+            }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Reason</span>
+            <span class="value">{{ contract.terminationDetails.reason }}</span>
+          </div>
+          <div
+            class="info-item full-width"
+            *ngIf="contract.terminationDetails.notes"
+          >
+            <span class="label">Notes</span>
+            <span class="value">{{ contract.terminationDetails.notes }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

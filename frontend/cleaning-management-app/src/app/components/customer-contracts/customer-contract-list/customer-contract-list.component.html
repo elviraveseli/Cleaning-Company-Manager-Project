@@ -1,0 +1,395 @@
+<div class="customer-contract-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Customer Contracts</h1>
+        <p>Manage customer service contracts and agreements</p>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-fab
+          color="primary"
+          (click)="createContract()"
+          matTooltip="Create New Contract"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="page-content">
+    <!-- Search and Actions Bar -->
+    <div class="toolbar-section">
+      <div class="search-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search contracts</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Search by contract number, customer name, or email..."
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            *ngIf="searchTerm"
+            (click)="clearSearch()"
+            aria-label="Clear"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- Filter Dropdowns -->
+        <div class="filter-section">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select
+              [(value)]="selectedStatus"
+              (selectionChange)="onStatusFilterChange()"
+            >
+              <mat-option value="">All Statuses</mat-option>
+              <mat-option *ngFor="let status of statusTypes" [value]="status">{{
+                status
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Contract Type</mat-label>
+            <mat-select
+              [(value)]="selectedType"
+              (selectionChange)="onTypeFilterChange()"
+            >
+              <mat-option value="">All Types</mat-option>
+              <mat-option *ngFor="let type of contractTypes" [value]="type">{{
+                type
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Customer</mat-label>
+            <mat-select
+              [(value)]="selectedCustomer"
+              (selectionChange)="onCustomerFilterChange()"
+            >
+              <mat-option value="">All Customers</mat-option>
+              <mat-option
+                *ngFor="let customer of customerOptions"
+                [value]="customer._id"
+              >
+                {{ customer.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button
+          mat-icon-button
+          (click)="refreshContracts()"
+          matTooltip="Refresh Data"
+          class="refresh-btn"
+        >
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button
+          mat-stroked-button
+          (click)="exportToCSV()"
+          class="action-btn"
+          [disabled]="loading"
+        >
+          <mat-icon>file_download</mat-icon>
+          Export CSV
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="createContract()"
+          class="primary-btn"
+        >
+          <mat-icon>description</mat-icon>
+          New Contract
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>description</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.total }}</div>
+              <div class="stat-label">Total Contracts</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon active">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.active }}</div>
+              <div class="stat-label">Active</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon pending">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.pending }}</div>
+              <div class="stat-label">Pending</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon revenue">
+              <mat-icon>attach_money</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">
+                {{ formatCurrency(stats.totalRevenue) }}
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error</mat-icon>
+      {{ error }}
+    </div>
+
+    <!-- Data Table Card -->
+    <mat-card class="table-card" *ngIf="!loading">
+      <div class="table-container">
+        <!-- Loading Spinner -->
+        <div *ngIf="loading" class="loading-spinner">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading contracts...</p>
+        </div>
+
+        <div class="table-wrapper" [class.loading]="loading">
+          <table class="contracts-table" *ngIf="!loading">
+            <thead>
+              <tr>
+                <th>Contract #</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Amount</th>
+                <th>Expiry</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let contract of filteredContracts;
+                  trackBy: trackByContractId
+                "
+                class="contract-row"
+              >
+                <td class="contract-number-cell">
+                  <div class="contract-number">
+                    {{ contract.contractNumber }}
+                  </div>
+                </td>
+                <td class="customer-name-cell">
+                  <div class="customer-profile">
+                    <div class="customer-avatar">
+                      {{ getCustomerInitials(contract.customer.name) }}
+                    </div>
+                    <div class="customer-info">
+                      <div class="customer-name">
+                        {{ contract.customer.name }}
+                      </div>
+                      <div class="customer-email">
+                        {{ contract.customer.email }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="type-cell">
+                  <span class="contract-type-badge">{{
+                    contract.contractType
+                  }}</span>
+                </td>
+                <td class="status-cell">
+                  <div
+                    class="status-indicator"
+                    [ngClass]="getStatusClass(contract.status)"
+                  >
+                    <i class="material-icons">{{
+                      getStatusIcon(contract.status)
+                    }}</i>
+                    <span>{{ contract.status }}</span>
+                  </div>
+                </td>
+                <td class="date-cell">{{ formatDate(contract.startDate) }}</td>
+                <td class="date-cell">
+                  {{ contract.endDate ? formatDate(contract.endDate) : "N/A" }}
+                </td>
+                <td class="amount-cell">
+                  {{ formatCurrency(contract.totalAmount) }}
+                </td>
+                <td class="expiry-cell">
+                  <span
+                    *ngIf="getDaysUntilExpiry(contract) !== null"
+                    class="expiry-info"
+                    [ngClass]="{
+                      'expiry-warning':
+                        getDaysUntilExpiry(contract)! <= 30 &&
+                        getDaysUntilExpiry(contract)! > 0,
+                      'expiry-danger': getDaysUntilExpiry(contract)! <= 0
+                    }"
+                  >
+                    {{
+                      getDaysUntilExpiry(contract)! > 0
+                        ? getDaysUntilExpiry(contract) + " days"
+                        : "Expired"
+                    }}
+                  </span>
+                  <span
+                    *ngIf="getDaysUntilExpiry(contract) === null"
+                    class="no-expiry"
+                  >
+                    No End Date
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <div class="actions-menu">
+                    <button
+                      class="action-btn view"
+                      (click)="viewContract(contract)"
+                      title="View Details"
+                    >
+                      <i class="material-icons">visibility</i>
+                    </button>
+                    <button
+                      class="action-btn email"
+                      (click)="sendContractEmail(contract)"
+                      [disabled]="!canSendEmail(contract)"
+                      title="Send Email"
+                    >
+                      <i class="material-icons">email</i>
+                    </button>
+                    <button
+                      class="action-btn edit"
+                      (click)="editContract(contract)"
+                      title="Edit Contract"
+                    >
+                      <i class="material-icons">edit</i>
+                    </button>
+                    <button
+                      class="action-btn copy"
+                      (click)="duplicateContract(contract)"
+                      title="Duplicate Contract"
+                    >
+                      <i class="material-icons">content_copy</i>
+                    </button>
+                    <button
+                      class="action-btn delete"
+                      (click)="deleteContract(contract)"
+                      title="Delete Contract"
+                    >
+                      <i class="material-icons">delete</i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty state -->
+              <tr
+                *ngIf="filteredContracts.length === 0 && !loading"
+                class="empty-row"
+              >
+                <td colspan="9" class="empty-cell">
+                  <div class="empty-state">
+                    <i class="material-icons">description</i>
+                    <h3>No contracts found</h3>
+                    <p
+                      *ngIf="
+                        searchTerm ||
+                        selectedStatus ||
+                        selectedType ||
+                        selectedCustomer
+                      "
+                    >
+                      Try adjusting your search criteria or filters
+                    </p>
+                    <p
+                      *ngIf="
+                        !searchTerm &&
+                        !selectedStatus &&
+                        !selectedType &&
+                        !selectedCustomer
+                      "
+                    >
+                      Get started by creating your first contract
+                    </p>
+                    <button class="btn btn-primary" (click)="createContract()">
+                      <i class="material-icons">add</i>
+                      Create First Contract
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Loading state -->
+              <tr *ngIf="loading" class="loading-row">
+                <td colspan="9" class="loading-cell">
+                  <div class="loading-spinner">
+                    <i class="material-icons spinning">refresh</i>
+                    <span>Loading contracts...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [pageSize]="pageSize"
+          [length]="filteredContracts.length"
+          showFirstLastButtons
+          class="table-paginator"
+          (page)="onPageChange($event)"
+          aria-label="Select page of contracts"
+        >
+        </mat-paginator>
+      </div>
+    </mat-card>
+  </div>
+</div>

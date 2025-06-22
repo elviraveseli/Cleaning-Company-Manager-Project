@@ -1,0 +1,668 @@
+<div class="container">
+  <div class="page-header">
+    <h1>{{ isEditMode ? "Edit Contract" : "New Contract" }}</h1>
+    <p>
+      {{
+        isEditMode
+          ? "Update contract details"
+          : "Create a new customer contract"
+      }}
+    </p>
+  </div>
+
+  <div class="form-container" *ngIf="!isLoading">
+    <form [formGroup]="contractForm" (ngSubmit)="onSubmit()">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('basic')">
+          <h2>Basic Information</h2>
+          <mat-icon class="section-icon">description</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.basic ? "keyboard_arrow_up" : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.basic"
+        >
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Contract Number*</mat-label>
+              <input
+                matInput
+                formControlName="contractNumber"
+                required
+                readonly
+              />
+              <mat-error>{{ getErrorMessage("contractNumber") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Contract Type*</mat-label>
+              <mat-select formControlName="contractType" required>
+                <mat-option *ngFor="let type of contractTypes" [value]="type">
+                  {{ type }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage("contractType") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Status*</mat-label>
+              <mat-select formControlName="status" required>
+                <mat-option *ngFor="let status of statusTypes" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage("status") }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date*</mat-label>
+              <input
+                matInput
+                [matDatepicker]="startPicker"
+                formControlName="startDate"
+                required
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="startPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+              <mat-error>{{ getErrorMessage("startDate") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="endPicker"
+                formControlName="endDate"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="endPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('customer')">
+          <h2>Customer Information</h2>
+          <mat-icon class="section-icon">person</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.customer
+              ? "keyboard_arrow_up"
+              : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.customer"
+        >
+          <div class="form-row">
+            <ng-container *ngIf="!isEditMode; else showCustomerName">
+              <mat-form-field appearance="outline">
+                <mat-label>Customer*</mat-label>
+                <mat-select
+                  formControlName="customerId"
+                  (selectionChange)="onCustomerSelected($event.value)"
+                >
+                  <ngx-mat-select-search
+                    [formControl]="customerFilterCtrl"
+                  ></ngx-mat-select-search>
+                  <mat-option
+                    *ngFor="let customer of filteredCustomers"
+                    [value]="customer._id"
+                  >
+                    {{
+                      customer.fullName ||
+                        customer.name ||
+                        customer.firstName + " " + customer.lastName
+                    }}
+                    ({{ customer.email }})
+                  </mat-option>
+                </mat-select>
+                <mat-error>{{ getErrorMessage("customerId") }}</mat-error>
+              </mat-form-field>
+            </ng-container>
+            <ng-template #showCustomerName>
+              <mat-form-field appearance="outline">
+                <mat-label>Customer*</mat-label>
+                <input
+                  matInput
+                  [value]="contractForm.get('customerName')?.value"
+                  readonly
+                />
+              </mat-form-field>
+            </ng-template>
+            <mat-form-field appearance="outline">
+              <mat-label>Email*</mat-label>
+              <input
+                matInput
+                type="email"
+                formControlName="customerEmail"
+                required
+              />
+              <mat-error>{{ getErrorMessage("customerEmail") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Phone*</mat-label>
+              <input matInput formControlName="customerPhone" required />
+              <mat-error>{{ getErrorMessage("customerPhone") }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Object Selection -->
+          <div
+            class="form-row"
+            *ngIf="selectedCustomer && customerObjects.length > 0"
+          >
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Object Location</mat-label>
+              <mat-select
+                formControlName="objectId"
+                (selectionChange)="onObjectSelected($event.value)"
+              >
+                <mat-option value="">-- Select an object --</mat-option>
+                <mat-option
+                  *ngFor="let object of customerObjects"
+                  [value]="object._id"
+                >
+                  {{ object.name }} - {{ object.address.street }},
+                  {{ object.address.city }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div formGroupName="customerAddress">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Street Address*</mat-label>
+                <input matInput formControlName="street" />
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>City*</mat-label>
+                <input matInput formControlName="city" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Municipality*</mat-label>
+                <input matInput formControlName="municipality" />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('services')">
+          <h2>Services</h2>
+          <mat-icon class="section-icon">cleaning_services</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.services
+              ? "keyboard_arrow_up"
+              : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.services"
+        >
+          <div class="add-button-container">
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              (click)="addService()"
+            >
+              <mat-icon>add</mat-icon>
+              Add Service
+            </button>
+          </div>
+
+          <div formArrayName="services">
+            <div
+              *ngFor="let service of services.controls; let i = index"
+              [formGroupName]="i"
+              class="service-card"
+            >
+              <div class="card-header">
+                <h4>Service {{ i + 1 }}</h4>
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="warn"
+                  (click)="removeService(i)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <div class="service-content">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Service Type*</mat-label>
+                    <mat-select
+                      formControlName="name"
+                      required
+                      (selectionChange)="onServiceTypeSelected(i)"
+                    >
+                      <mat-option
+                        *ngFor="let type of serviceTypes"
+                        [value]="type.name"
+                      >
+                        {{ type.name }} ({{ type.pricePerHour }} €/hr)
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getErrorMessage("name") }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Frequency*</mat-label>
+                    <mat-select formControlName="frequency" required>
+                      <mat-option
+                        *ngFor="let freq of serviceFrequencies"
+                        [value]="freq"
+                      >
+                        {{ freq }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Price (€)*</mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      formControlName="price"
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                    <span matPrefix>€&nbsp;</span>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Description</mat-label>
+                    <textarea
+                      matInput
+                      formControlName="description"
+                      rows="2"
+                    ></textarea>
+                  </mat-form-field>
+                </div>
+
+                <!-- Working Days and Times for this Service -->
+                <div class="working-days-section">
+                  <div class="subsection-header">
+                    <h5>Working Schedule</h5>
+                    <button
+                      type="button"
+                      mat-icon-button
+                      color="primary"
+                      (click)="addWorkingDayToService(i)"
+                    >
+                      <mat-icon>add_circle</mat-icon>
+                    </button>
+                  </div>
+
+                  <div formArrayName="workingDaysAndTimes">
+                    <div
+                      *ngFor="
+                        let workingDay of getServiceWorkingDays(i).controls;
+                        let j = index
+                      "
+                      [formGroupName]="j"
+                      class="working-day-item"
+                    >
+                      <div class="working-day-header">
+                        <mat-form-field appearance="outline" class="day-select">
+                          <mat-label>Day*</mat-label>
+                          <mat-select formControlName="day" required>
+                            <mat-option
+                              *ngFor="let day of daysOfWeek"
+                              [value]="day"
+                            >
+                              {{ day }}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                        <button
+                          type="button"
+                          mat-icon-button
+                          color="warn"
+                          (click)="removeWorkingDayFromService(i, j)"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+
+                      <div class="time-slots-section">
+                        <div class="time-slots-header">
+                          <span>Time Slots</span>
+                          <button
+                            type="button"
+                            mat-icon-button
+                            color="primary"
+                            (click)="addTimeSlotToService(i, j)"
+                          >
+                            <mat-icon>add_circle_outline</mat-icon>
+                          </button>
+                        </div>
+
+                        <div formArrayName="timeSlots">
+                          <div
+                            *ngFor="
+                              let timeSlot of getServiceTimeSlots(i, j)
+                                .controls;
+                              let k = index
+                            "
+                            [formGroupName]="k"
+                            class="time-slot-row"
+                          >
+                            <mat-form-field appearance="outline">
+                              <mat-label>From*</mat-label>
+                              <input
+                                matInput
+                                formControlName="from"
+                                placeholder="09:00"
+                              />
+                              <mat-hint>Format: HH:MM</mat-hint>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                              <mat-label>To*</mat-label>
+                              <input
+                                matInput
+                                formControlName="to"
+                                placeholder="12:00"
+                              />
+                              <mat-hint>Format: HH:MM</mat-hint>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                              <mat-label>Duration (hours)*</mat-label>
+                              <input
+                                matInput
+                                type="number"
+                                formControlName="duration"
+                                placeholder="3"
+                                min="0.5"
+                                max="12"
+                                step="0.5"
+                              />
+                            </mat-form-field>
+
+                            <button
+                              type="button"
+                              mat-icon-button
+                              color="warn"
+                              (click)="removeTimeSlotFromService(i, j, k)"
+                            >
+                              <mat-icon>remove_circle_outline</mat-icon>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('financial')">
+          <h2>Financial Information</h2>
+          <mat-icon class="section-icon">euro</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.financial
+              ? "keyboard_arrow_up"
+              : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.financial"
+        >
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Total Amount*</mat-label>
+              <input matInput formControlName="totalAmount" required readonly />
+              <span matPrefix>€&nbsp;</span>
+              <mat-error>{{ getErrorMessage("totalAmount") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>VAT (%)</mat-label>
+              <input matInput formControlName="vat" readonly />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Total Amount with VAT</mat-label>
+              <input matInput formControlName="totalAmountWithVAT" readonly />
+              <span matPrefix>€&nbsp;</span>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Billing Frequency*</mat-label>
+              <mat-select formControlName="billingFrequency" required>
+                <mat-option
+                  *ngFor="let freq of billingFrequencies"
+                  [value]="freq"
+                >
+                  {{ freq }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage("billingFrequency") }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Payment Terms*</mat-label>
+              <mat-select formControlName="paymentTerms" required>
+                <mat-option *ngFor="let term of paymentTerms" [value]="term">
+                  {{ term }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage("paymentTerms") }}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Preferences -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('preferences')">
+          <h2>Service Preferences</h2>
+          <mat-icon class="section-icon">settings</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.preferences
+              ? "keyboard_arrow_up"
+              : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.preferences"
+        >
+          <div formGroupName="servicePreferences">
+            <div class="form-row">
+              <mat-checkbox formControlName="keyAccess">
+                Key access available
+              </mat-checkbox>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Pet Instructions</mat-label>
+                <textarea
+                  matInput
+                  formControlName="petInstructions"
+                  rows="2"
+                ></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Access Instructions</mat-label>
+                <textarea
+                  matInput
+                  formControlName="accessInstructions"
+                  rows="2"
+                ></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Special Requests</mat-label>
+                <textarea
+                  matInput
+                  formControlName="specialRequests"
+                  rows="2"
+                ></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="form-section">
+        <div class="section-header" (click)="toggleSection('additional')">
+          <h2>Additional Information</h2>
+          <mat-icon class="section-icon">notes</mat-icon>
+          <mat-icon class="toggle-icon">{{
+            expandedSections.additional
+              ? "keyboard_arrow_up"
+              : "keyboard_arrow_down"
+          }}</mat-icon>
+        </div>
+
+        <div
+          class="section-content"
+          [class.collapsed]="!expandedSections.additional"
+        >
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Terms & Conditions</mat-label>
+              <textarea matInput formControlName="terms" rows="4"></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notes</mat-label>
+              <textarea matInput formControlName="notes" rows="3"></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Address -->
+      <div class="form-section" formGroupName="billingAddress">
+        <div class="section-header">
+          <h2>Billing Address</h2>
+          <mat-icon class="section-icon">receipt</mat-icon>
+        </div>
+
+        <div class="section-content">
+          <mat-checkbox formControlName="sameAsService"
+            >Use service address for billing</mat-checkbox
+          >
+
+          <div
+            *ngIf="!contractForm.get('billingAddress.sameAsService')?.value"
+            class="billing-fields"
+          >
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Billing Street Address</mat-label>
+                <input matInput formControlName="address" />
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Billing City</mat-label>
+                <input matInput formControlName="city" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Billing Municipality</mat-label>
+                <mat-select formControlName="municipality">
+                  <mat-option
+                    *ngFor="let municipality of municipalities"
+                    [value]="municipality"
+                  >
+                    {{ municipality }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Billing Country</mat-label>
+                <input matInput formControlName="country" />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="onCancel()"
+          [disabled]="isSaving"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="contractForm.invalid || isSaving"
+        >
+          <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          {{ isEditMode ? "Update Contract" : "Create Contract" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading contract details...</p>
+  </div>
+</div>

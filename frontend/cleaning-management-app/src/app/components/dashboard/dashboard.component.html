@@ -1,0 +1,293 @@
+<div class="dashboard-container">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="welcome-text">
+        <h1>Welcome back, Admin!</h1>
+        <p>Here's what's happening with your cleaning business today.</p>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-icon-button
+          (click)="refreshData()"
+          matTooltip="Refresh Data"
+          [disabled]="loading"
+        >
+          <mat-icon [class.spin]="loading">refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <mat-card class="stat-card employees-card" routerLink="/employees">
+        <mat-card-content>
+          <div class="stat-header">
+            <div class="stat-icon employees-icon">
+              <mat-icon>people</mat-icon>
+            </div>
+            <div class="stat-trend">
+              <mat-icon class="trend-up">trending_up</mat-icon>
+              <span>+5%</span>
+            </div>
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">
+              {{ loading ? "..." : totalEmployees }}
+            </div>
+            <div class="stat-label">Total Employees</div>
+            <div class="stat-sublabel">Active staff members</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card
+        class="stat-card contracts-card"
+        routerLink="/customer-contracts"
+      >
+        <mat-card-content>
+          <div class="stat-header">
+            <div class="stat-icon contracts-icon">
+              <mat-icon>business</mat-icon>
+            </div>
+            <div class="stat-trend">
+              <mat-icon class="trend-up">trending_up</mat-icon>
+              <span>+12%</span>
+            </div>
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">
+              {{ loading ? "..." : activeContracts }}
+            </div>
+            <div class="stat-label">Active Contracts</div>
+            <div class="stat-sublabel">Customer agreements</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card locations-card" routerLink="/objects">
+        <mat-card-content>
+          <div class="stat-header">
+            <div class="stat-icon locations-icon">
+              <mat-icon>location_on</mat-icon>
+            </div>
+            <div class="stat-trend">
+              <mat-icon class="trend-up">trending_up</mat-icon>
+              <span>+8%</span>
+            </div>
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">
+              {{ loading ? "..." : totalLocations }}
+            </div>
+            <div class="stat-label">Locations</div>
+            <div class="stat-sublabel">Active cleaning sites</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card tasks-card" routerLink="/schedules">
+        <mat-card-content>
+          <div class="stat-header">
+            <div class="stat-icon tasks-icon">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="stat-trend">
+              <mat-icon class="trend-down">trending_down</mat-icon>
+              <span>-3%</span>
+            </div>
+          </div>
+          <div class="stat-details">
+            <div class="stat-number">{{ loading ? "..." : todaysTasks }}</div>
+            <div class="stat-label">Today's Tasks</div>
+            <div class="stat-sublabel">Scheduled cleanings</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- Left Column -->
+    <div class="content-column">
+      <!-- Recent Activities -->
+      <mat-card class="activity-card">
+        <mat-card-header>
+          <div class="card-header">
+            <mat-card-title>Recent Activities</mat-card-title>
+            <button mat-icon-button>
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="activity-list"
+            *ngIf="!loading && recentActivities.length > 0"
+          >
+            <div
+              class="activity-item"
+              *ngFor="let activity of recentActivities"
+            >
+              <div class="activity-icon" [ngClass]="activity.type">
+                <mat-icon>{{ activity.icon }}</mat-icon>
+              </div>
+              <div class="activity-content">
+                <div class="activity-title">{{ activity.title }}</div>
+                <div class="activity-time">{{ activity.time }}</div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="empty-state"
+            *ngIf="!loading && recentActivities.length === 0"
+          >
+            <mat-icon>history</mat-icon>
+            <p>No recent activities</p>
+          </div>
+          <div class="loading-state" *ngIf="loading">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading activities...</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Quick Actions -->
+      <mat-card class="quick-actions-card">
+        <mat-card-header>
+          <mat-card-title>Quick Actions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="actions-grid">
+            <button
+              mat-stroked-button
+              class="action-btn"
+              routerLink="/employees/new"
+            >
+              <mat-icon>person_add</mat-icon>
+              <span>Add Employee</span>
+            </button>
+            <button
+              mat-stroked-button
+              class="action-btn"
+              routerLink="/customer-contracts/new"
+            >
+              <mat-icon>add_business</mat-icon>
+              <span>New Contract</span>
+            </button>
+            <button
+              mat-stroked-button
+              class="action-btn"
+              routerLink="/schedules/new"
+            >
+              <mat-icon>add_task</mat-icon>
+              <span>Schedule Task</span>
+            </button>
+            <button
+              mat-stroked-button
+              class="action-btn"
+              routerLink="/invoices/new"
+            >
+              <mat-icon>receipt_long</mat-icon>
+              <span>Create Invoice</span>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Right Column -->
+    <div class="content-column">
+      <!-- Upcoming Tasks -->
+      <mat-card class="tasks-card">
+        <mat-card-header>
+          <div class="card-header">
+            <mat-card-title>Upcoming Tasks</mat-card-title>
+            <button mat-button color="primary">View All</button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="tasks-list" *ngIf="!loading && upcomingTasks.length > 0">
+            <div class="task-item" *ngFor="let task of upcomingTasks">
+              <div class="task-time">
+                <div class="time">{{ task.time }}</div>
+                <div class="date">{{ task.date }}</div>
+              </div>
+              <div class="task-content">
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-location">
+                  <mat-icon>location_on</mat-icon>
+                  <span>{{ task.location }}</span>
+                </div>
+              </div>
+              <div class="task-status" [ngClass]="task.status">
+                <mat-icon>{{ task.statusIcon }}</mat-icon>
+              </div>
+            </div>
+          </div>
+          <div
+            class="empty-state"
+            *ngIf="!loading && upcomingTasks.length === 0"
+          >
+            <mat-icon>event_available</mat-icon>
+            <p>No upcoming tasks scheduled</p>
+          </div>
+          <div class="loading-state" *ngIf="loading">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading tasks...</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Performance Chart -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <div class="card-header">
+            <mat-card-title>Performance Overview</mat-card-title>
+            <mat-button-toggle-group value="week">
+              <mat-button-toggle value="week">Week</mat-button-toggle>
+              <mat-button-toggle value="month">Month</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-placeholder">
+            <div class="chart-info" *ngIf="!loading">
+              <div class="chart-metric">
+                <div class="metric-value">{{ completionRate }}%</div>
+                <div class="metric-label">Completion Rate</div>
+              </div>
+              <div class="chart-metric">
+                <div class="metric-value">{{ averageRating }}</div>
+                <div class="metric-label">Avg Rating</div>
+              </div>
+              <div class="chart-metric">
+                <div class="metric-value">
+                  {{ formatCurrency(totalRevenue) }}
+                </div>
+                <div class="metric-label">Revenue</div>
+              </div>
+            </div>
+            <div class="chart-info" *ngIf="loading">
+              <div class="chart-metric">
+                <div class="metric-value">...</div>
+                <div class="metric-label">Completion Rate</div>
+              </div>
+              <div class="chart-metric">
+                <div class="metric-value">...</div>
+                <div class="metric-label">Avg Rating</div>
+              </div>
+              <div class="chart-metric">
+                <div class="metric-value">...</div>
+                <div class="metric-label">Revenue</div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

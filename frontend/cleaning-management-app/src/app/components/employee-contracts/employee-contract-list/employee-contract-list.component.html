@@ -1,0 +1,390 @@
+<div class="contract-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Employee Contracts</h1>
+        <p>Manage employment contracts and agreements</p>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-fab
+          color="primary"
+          (click)="addContract()"
+          matTooltip="Add New Contract"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="page-content">
+    <!-- Search and Actions Bar -->
+    <div class="toolbar-section">
+      <div class="search-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search contracts</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (keyup)="applyFilter(searchTerm)"
+            placeholder="Search by employee, type, status..."
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            *ngIf="searchTerm"
+            (click)="clearSearch()"
+            aria-label="Clear"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- Filter Dropdowns -->
+        <div class="filter-section">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select (selectionChange)="filterByStatus($event.value)">
+              <mat-option value="all">All Statuses</mat-option>
+              <mat-option value="active">Active</mat-option>
+              <mat-option value="expired">Expired</mat-option>
+              <mat-option value="terminated">Terminated</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Type</mat-label>
+            <mat-select (selectionChange)="filterByType($event.value)">
+              <mat-option value="all">All Types</mat-option>
+              <mat-option value="full-time">Full-time</mat-option>
+              <mat-option value="part-time">Part-time</mat-option>
+              <mat-option value="temporary">Temporary</mat-option>
+              <mat-option value="contract">Contract</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button
+          mat-icon-button
+          (click)="refreshContracts()"
+          matTooltip="Refresh Data"
+          class="refresh-btn"
+        >
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button
+          mat-stroked-button
+          (click)="exportContracts()"
+          class="action-btn"
+        >
+          <mat-icon>file_download</mat-icon>
+          Export CSV
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addContract()"
+          class="primary-btn"
+        >
+          <mat-icon>description</mat-icon>
+          New Contract
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>description</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ getTotalContracts() }}</div>
+              <div class="stat-label">Total Contracts</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon active">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ getActiveContracts() }}</div>
+              <div class="stat-label">Active Contracts</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon expired">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ getExpiredContracts() }}</div>
+              <div class="stat-label">Expired Contracts</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Data Table Card -->
+    <mat-card class="table-card">
+      <div class="table-container">
+        <div class="loading-overlay" *ngIf="isLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          class="contracts-table"
+        >
+          <!-- Employee Name Column -->
+          <ng-container matColumnDef="employeeName">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="name-header"
+            >
+              Employee
+            </th>
+            <td mat-cell *matCellDef="let contract" class="name-cell">
+              <div class="employee-profile">
+                <div class="employee-avatar">
+                  {{ getEmployeeInitials(contract.employeeName) }}
+                </div>
+                <div class="employee-info">
+                  <div class="employee-name">{{ contract.employeeName }}</div>
+                  <div class="contract-id">
+                    Contract ID: #{{ contract._id.slice(-6) }}
+                  </div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Contract Type Column -->
+          <ng-container matColumnDef="contractType">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+            <td mat-cell *matCellDef="let contract">
+              <div class="type-badge">{{ contract.contractType }}</div>
+            </td>
+          </ng-container>
+
+          <!-- Start Date Column -->
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Start Date
+            </th>
+            <td mat-cell *matCellDef="let contract">
+              <div class="date-info">
+                <mat-icon class="date-icon">event</mat-icon>
+                <span>{{ contract.startDate | date : "mediumDate" }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- End Date Column -->
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>End Date</th>
+            <td mat-cell *matCellDef="let contract">
+              <div class="date-info">
+                <mat-icon class="date-icon">event_available</mat-icon>
+                <span>{{
+                  contract.endDate
+                    ? (contract.endDate | date : "mediumDate")
+                    : "Ongoing"
+                }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Salary Column -->
+          <ng-container matColumnDef="salary">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Salary</th>
+            <td mat-cell *matCellDef="let contract">
+              <div class="salary-info">
+                <mat-icon class="salary-icon">euro</mat-icon>
+                <span>{{
+                  contract.salary | currency : "EUR" : "symbol" : "1.0-0"
+                }}</span>
+                <div class="frequency">{{ contract.paymentFrequency }}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let contract">
+              <div class="status-container">
+                <span
+                  class="status-badge"
+                  [ngClass]="getStatusClass(contract.status)"
+                >
+                  <mat-icon class="status-icon">{{
+                    getStatusIcon(contract.status)
+                  }}</mat-icon>
+                  {{ contract.status }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">
+              Actions
+            </th>
+            <td mat-cell *matCellDef="let contract" class="actions-cell">
+              <div class="action-buttons">
+                <button
+                  mat-icon-button
+                  class="action-btn-icon view-btn"
+                  (click)="viewContract(contract)"
+                  matTooltip="View Details"
+                >
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn-icon edit-btn"
+                  (click)="editContract(contract)"
+                  matTooltip="Edit Contract"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn-icon duplicate-btn"
+                  (click)="duplicateContract(contract)"
+                  matTooltip="Duplicate Contract"
+                >
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn-icon print-btn"
+                  (click)="printContract(contract)"
+                  matTooltip="Print Contract"
+                >
+                  <mat-icon>print</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn-icon email-btn"
+                  (click)="emailContract(contract)"
+                  matTooltip="Email Contract"
+                >
+                  <mat-icon>email</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  *ngIf="
+                    contract.status === 'Expired' ||
+                    contract.status === 'Terminated'
+                  "
+                  class="action-btn-icon renew-btn"
+                  (click)="quickRenew(contract)"
+                  matTooltip="Quick Renew (1 Year)"
+                >
+                  <mat-icon>refresh</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  *ngIf="contract.status === 'Active'"
+                  class="action-btn-icon terminate-btn"
+                  (click)="terminateContract(contract)"
+                  matTooltip="Terminate Contract"
+                >
+                  <mat-icon>cancel</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn-icon delete-btn"
+                  (click)="deleteContract(contract)"
+                  matTooltip="Delete Contract"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns"
+            class="table-header"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            class="table-row"
+          ></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row no-data-row" *matNoDataRow>
+            <td
+              class="mat-cell no-data-cell"
+              [attr.colspan]="displayedColumns.length"
+            >
+              <div class="no-data-content" *ngIf="!isLoading">
+                <div class="no-data-icon">
+                  <mat-icon>description</mat-icon>
+                </div>
+                <div class="no-data-text">
+                  <h3 *ngIf="searchTerm">No contracts found</h3>
+                  <h3 *ngIf="!searchTerm">No contracts yet</h3>
+                  <p *ngIf="searchTerm">
+                    Try adjusting your search criteria or clear the search to
+                    see all contracts.
+                  </p>
+                  <p *ngIf="!searchTerm">
+                    Get started by creating your first employee contract.
+                  </p>
+                </div>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  *ngIf="!searchTerm"
+                  (click)="addContract()"
+                >
+                  <mat-icon>description</mat-icon>
+                  Create First Contract
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [pageSize]="25"
+          showFirstLastButtons
+          class="table-paginator"
+          aria-label="Select page of contracts"
+        >
+        </mat-paginator>
+      </div>
+    </mat-card>
+  </div>
+</div>

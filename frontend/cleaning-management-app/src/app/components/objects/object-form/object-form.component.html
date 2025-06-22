@@ -1,0 +1,421 @@
+<div class="object-form-container">
+  <!-- Form Header -->
+  <div class="form-header">
+    <h1>{{ isEditMode ? "Edit" : "New" }} Object</h1>
+    <p>
+      {{
+        isEditMode
+          ? "Update object information and settings"
+          : "Add a new cleaning location to your system"
+      }}
+    </p>
+  </div>
+
+  <!-- Main Form Content -->
+  <div class="form-content">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Loading object details...</span>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="error-alert" *ngIf="error">
+      <mat-icon>error</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <form [formGroup]="objectForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <!-- Customer Selection Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Customer Selection</h2>
+          <mat-icon class="section-icon">person</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Customer</mat-label>
+            <mat-select
+              formControlName="customerId"
+              required
+              (selectionChange)="onCustomerChange($event.value)"
+            >
+              <mat-option
+                *ngFor="let customer of customers"
+                [value]="customer._id"
+              >
+                {{ getCustomerDisplayName(customer) }} - {{ customer.email }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="objectForm.get('customerId')?.hasError('required')"
+            >
+              Please select a customer
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Basic Information</h2>
+          <mat-icon class="section-icon">info</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Object Name</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              required
+              placeholder="Enter object name"
+            />
+            <mat-error *ngIf="objectForm.get('name')?.hasError('required')">
+              Object name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Object Type</mat-label>
+            <mat-select formControlName="type" required>
+              <mat-option *ngFor="let type of objectTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="objectForm.get('type')?.hasError('required')">
+              Object type is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status" required>
+              <mat-option *ngFor="let status of statusTypes" [value]="status">
+                {{ status }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="objectForm.get('status')?.hasError('required')">
+              Status is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Address Information Section -->
+      <div class="form-section" formGroupName="address">
+        <div class="section-header">
+          <h2>Address Information</h2>
+          <mat-icon class="section-icon">location_on</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address</mat-label>
+            <input
+              matInput
+              formControlName="street"
+              required
+              placeholder="Enter street address"
+            />
+            <mat-error
+              *ngIf="objectForm.get('address.street')?.hasError('required')"
+            >
+              Street address is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input
+              matInput
+              formControlName="city"
+              required
+              placeholder="Enter city"
+            />
+            <mat-error
+              *ngIf="objectForm.get('address.city')?.hasError('required')"
+            >
+              City is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Municipality</mat-label>
+            <mat-select formControlName="municipality" required>
+              <mat-option
+                *ngFor="let municipality of kosovoMunicipalities"
+                [value]="municipality"
+              >
+                {{ municipality }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="
+                objectForm.get('address.municipality')?.hasError('required')
+              "
+            >
+              Municipality is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Country</mat-label>
+            <input
+              matInput
+              formControlName="country"
+              required
+              placeholder="Enter country"
+            />
+            <mat-error
+              *ngIf="objectForm.get('address.country')?.hasError('required')"
+            >
+              Country is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Contact Person Section -->
+      <div class="form-section" formGroupName="contactPerson">
+        <div class="section-header">
+          <h2>Contact Person</h2>
+          <mat-icon class="section-icon">person</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Contact Name</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              required
+              placeholder="Enter contact name"
+            />
+            <mat-error
+              *ngIf="objectForm.get('contactPerson.name')?.hasError('required')"
+            >
+              Contact name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Contact Phone</mat-label>
+            <input
+              matInput
+              formControlName="phone"
+              placeholder="Enter phone number"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Contact Email</mat-label>
+            <input
+              matInput
+              formControlName="email"
+              type="email"
+              placeholder="Enter email address"
+            />
+            <mat-error
+              *ngIf="objectForm.get('contactPerson.email')?.hasError('email')"
+            >
+              Please enter a valid email address
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Object Details Section -->
+      <div class="form-section" formGroupName="size">
+        <div class="section-header">
+          <h2>Object Details</h2>
+          <mat-icon class="section-icon">home</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Size</mat-label>
+            <input
+              matInput
+              formControlName="area"
+              type="number"
+              min="0"
+              placeholder="Enter area"
+            />
+            <mat-error *ngIf="objectForm.get('size.area')?.hasError('min')">
+              Size must be greater than 0
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Unit</mat-label>
+            <mat-select formControlName="unit">
+              <mat-option *ngFor="let unit of sizeUnits" [value]="unit">
+                {{ unit }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Building Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Building Details</h2>
+          <mat-icon class="section-icon">apartment</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Floors</mat-label>
+            <input
+              matInput
+              formControlName="floors"
+              type="number"
+              min="1"
+              placeholder="Number of floors"
+            />
+            <mat-error *ngIf="objectForm.get('floors')?.hasError('required')">
+              Number of floors is required
+            </mat-error>
+            <mat-error *ngIf="objectForm.get('floors')?.hasError('min')">
+              Must have at least 1 floor
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Rooms</mat-label>
+            <input
+              matInput
+              formControlName="rooms"
+              type="number"
+              min="1"
+              placeholder="Number of rooms"
+            />
+            <mat-error *ngIf="objectForm.get('rooms')?.hasError('required')">
+              Number of rooms is required
+            </mat-error>
+            <mat-error *ngIf="objectForm.get('rooms')?.hasError('min')">
+              Must have at least 1 room
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Cleaning Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Cleaning Information</h2>
+          <mat-icon class="section-icon">cleaning_services</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Cleaning Frequency</mat-label>
+            <mat-select formControlName="cleaningFrequency" required>
+              <mat-option
+                *ngFor="let frequency of cleaningFrequencies"
+                [value]="frequency"
+              >
+                {{ frequency }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="objectForm.get('cleaningFrequency')?.hasError('required')"
+            >
+              Cleaning frequency is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Cleaning Time (hours)</mat-label>
+            <input
+              matInput
+              formControlName="estimatedCleaningTime"
+              type="number"
+              min="0.5"
+              max="24"
+              step="0.5"
+              placeholder="Hours needed for cleaning"
+            />
+            <mat-error
+              *ngIf="
+                objectForm.get('estimatedCleaningTime')?.hasError('required')
+              "
+            >
+              Estimated cleaning time is required
+            </mat-error>
+            <mat-error
+              *ngIf="objectForm.get('estimatedCleaningTime')?.hasError('min')"
+            >
+              Minimum time is 0.5 hours
+            </mat-error>
+            <mat-error
+              *ngIf="objectForm.get('estimatedCleaningTime')?.hasError('max')"
+            >
+              Maximum time is 24 hours
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Special Requirements Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Special Requirements</h2>
+          <mat-icon class="section-icon">checklist</mat-icon>
+        </div>
+        <div class="requirements-grid">
+          <mat-checkbox
+            *ngFor="let requirement of specialRequirements"
+            [checked]="isRequirementSelected(requirement)"
+            (change)="toggleRequirement(requirement)"
+          >
+            {{ requirement }}
+          </mat-checkbox>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Additional Information</h2>
+          <mat-icon class="section-icon">notes</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea
+              matInput
+              formControlName="notes"
+              rows="4"
+              placeholder="Enter any additional notes or special instructions"
+            ></textarea>
+            <mat-error *ngIf="objectForm.get('notes')?.hasError('maxlength')">
+              Notes cannot exceed 1000 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="goBack()"
+          [disabled]="saving"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="objectForm.invalid || saving"
+        >
+          <mat-icon>save</mat-icon>
+          {{ isEditMode ? "Update Object" : "Create Object" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

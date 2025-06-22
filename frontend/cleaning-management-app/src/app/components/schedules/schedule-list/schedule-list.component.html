@@ -1,0 +1,835 @@
+<div class="schedule-manager-container" [class.loading]="loading">
+  <!-- Top Header with Statistics -->
+  <div class="header-section">
+    <div class="header-main">
+      <div class="header-left">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">schedule</mat-icon>
+          Schedule Manager
+        </h1>
+        <div class="date-navigation">
+          <button
+            mat-icon-button
+            (click)="previousWeek()"
+            matTooltip="Previous Week"
+          >
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span class="current-date">{{ getCurrentWeekRange() }}</span>
+          <button mat-icon-button (click)="nextWeek()" matTooltip="Next Week">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+          <button mat-stroked-button (click)="goToToday()" class="today-btn">
+            <mat-icon>today</mat-icon>
+            Today
+          </button>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-icon-button
+          (click)="toggleFilters()"
+          matTooltip="Filters"
+          [class.active]="showFilters"
+        >
+          <mat-icon>filter_list</mat-icon>
+        </button>
+        <button mat-icon-button (click)="refreshData()" matTooltip="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-icon-button (click)="exportSchedules()" matTooltip="Export">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openScheduleDetail()"
+        >
+          <mat-icon>add</mat-icon>
+          New Schedule
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card today">
+          <div class="stat-icon">
+            <mat-icon>today</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Today's Schedules</h3>
+            <div class="stat-number">{{ todayStats.totalSchedules }}</div>
+            <div class="stat-breakdown">
+              <span class="completed"
+                >{{ todayStats.completedSchedules }} Completed</span
+              >
+              <span class="in-progress"
+                >{{ todayStats.inProgressSchedules }} In Progress</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card revenue">
+          <div class="stat-icon">
+            <mat-icon>attach_money</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Week Revenue</h3>
+            <div class="stat-number">
+              ${{ weekStats.totalRevenue | number : "1.0-0" }}
+            </div>
+            <div class="stat-sub">
+              {{ weekStats.totalHours }} hours scheduled
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card employees">
+          <div class="stat-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Employee Status</h3>
+            <div class="stat-number">
+              {{ availableEmployees.length }}/{{ employees.length }}
+            </div>
+            <div class="stat-sub">Available employees</div>
+          </div>
+        </div>
+
+        <div class="stat-card completion">
+          <div class="stat-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Completion Rate</h3>
+            <div class="stat-number">
+              {{ weekStats.completionRate | number : "1.0-0" }}%
+            </div>
+            <div class="stat-sub">This week</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" [class.expanded]="showFilters">
+      <div class="filters-content">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [(value)]="statusFilter">
+            <mat-option value="All">All Statuses</mat-option>
+            <mat-option value="Scheduled">Scheduled</mat-option>
+            <mat-option value="In Progress">In Progress</mat-option>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Cancelled">Cancelled</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Priority</mat-label>
+          <mat-select [(value)]="priorityFilter">
+            <mat-option value="All">All Priorities</mat-option>
+            <mat-option value="Low">Low</mat-option>
+            <mat-option value="Medium">Medium</mat-option>
+            <mat-option value="High">High</mat-option>
+            <mat-option value="Critical">Critical</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <button mat-button (click)="applyFilters()">Apply</button>
+          <button mat-button (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Calendar Section -->
+    <div class="calendar-section">
+      <div class="calendar-container">
+        <!-- Calendar Header -->
+        <div class="calendar-header">
+          <div class="time-header"></div>
+          <div
+            class="day-header"
+            *ngFor="let day of weekDays"
+            [class.today]="day.isToday"
+            [class.weekend]="day.isWeekend"
+          >
+            <div class="day-name">{{ day.shortName }}</div>
+            <div class="day-date">{{ day.date | date : "dd" }}</div>
+            <div class="day-month" *ngIf="day.date.getDate() === 1">
+              {{ day.date | date : "MMM" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar-grid">
+          <div class="time-column">
+            <div class="time-slot" *ngFor="let timeSlot of timeSlots">
+              <span class="time-label">{{ timeSlot.displayTime }}</span>
+            </div>
+          </div>
+
+          <div
+            class="day-column"
+            *ngFor="let day of weekDays; let dayIndex = index"
+            [attr.data-day]="dayIndex"
+          >
+            <div
+              class="time-slot"
+              *ngFor="let timeSlot of timeSlots; let timeIndex = index"
+              [class.has-event]="hasEventAt(dayIndex, timeIndex)"
+              [class.current-time]="false"
+              (click)="createScheduleAt(dayIndex, timeIndex)"
+              cdkDropList
+              [cdkDropListData]="[]"
+              class="schedule-drop-zone"
+            >
+              <!-- Schedule Events -->
+              <div
+                class="schedule-event"
+                *ngFor="let event of getEventsAt(dayIndex, timeIndex)"
+                [ngStyle]="{
+                  background: getEventColor(event.status),
+                  'border-left': '4px solid ' + getPriorityColor(event.priority)
+                }"
+                (click)="openScheduleDetail(event); $event.stopPropagation()"
+                cdkDrag
+                matTooltip="Click to edit schedule"
+                class="event-card"
+              >
+                <div class="event-header">
+                  <div class="event-title">
+                    {{ getObjectName(event.object) || "New Schedule" }}
+                  </div>
+                  <div
+                    class="event-priority"
+                    [ngStyle]="{ color: getPriorityColor(event.priority) }"
+                  >
+                    <mat-icon class="priority-icon">{{
+                      event.priority === "Critical"
+                        ? "priority_high"
+                        : event.priority === "High"
+                        ? "keyboard_arrow_up"
+                        : event.priority === "Low"
+                        ? "keyboard_arrow_down"
+                        : "remove"
+                    }}</mat-icon>
+                  </div>
+                </div>
+
+                <div class="event-details">
+                  <div class="event-time">
+                    {{ event.startTime }} - {{ event.endTime }}
+                  </div>
+                  <div class="event-employees" *ngIf="event.employees?.length">
+                    <mat-icon class="small-icon">people</mat-icon>
+                    <span *ngFor="let emp of event.employees; let last = last">
+                      {{ getEmployeeName(emp) }}<span *ngIf="!last">, </span>
+                    </span>
+                  </div>
+                  <div class="event-status">
+                    <span
+                      class="status-badge"
+                      [ngClass]="
+                        'status-' + event.status.toLowerCase().replace(' ', '-')
+                      "
+                    >
+                      {{ event.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar-section">
+      <!-- Available Employees Card -->
+      <div class="sidebar-panel employees-panel">
+        <div class="panel-header">
+          <h3>
+            <mat-icon>people</mat-icon>
+            Available Employees
+            <span class="count-badge">{{ availableEmployees.length }}</span>
+          </h3>
+          <button
+            mat-icon-button
+            matTooltip="Refresh employees"
+            (click)="refreshData()"
+          >
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+
+        <!-- Employee Search -->
+        <div class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search employees...</mat-label>
+            <input
+              matInput
+              [(ngModel)]="employeeSearchTerm"
+              (input)="filterEmployees()"
+              placeholder="Search by name or position"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div
+          class="panel-content scrollable-content"
+          cdkDropList
+          id="available-employees"
+          [cdkDropListData]="filteredAvailableEmployees"
+          [cdkDropListConnectedTo]="employeeListIds"
+          (cdkDropListDropped)="onEmployeeDrop($event)"
+        >
+          <div
+            class="employee-card available"
+            *ngFor="let employee of filteredAvailableEmployees"
+            cdkDrag
+            [cdkDragData]="employee"
+            (click)="showEmployeeDetails(employee)"
+          >
+            <div class="employee-avatar large-avatar">
+              <img
+                *ngIf="employee.profileImage"
+                [src]="employee.profileImage"
+                [alt]="employee.firstName"
+              />
+              <span *ngIf="!employee.profileImage"
+                >{{ employee.firstName.charAt(0)
+                }}{{ employee.lastName.charAt(0) }}</span
+              >
+            </div>
+
+            <div class="employee-info expanded-info">
+              <div class="employee-name">
+                {{ employee.firstName }} {{ employee.lastName }}
+              </div>
+              <div class="employee-position">{{ employee.position }}</div>
+              <div class="employee-contact">
+                <mat-icon class="contact-icon">email</mat-icon>
+                <span>{{ employee.email }}</span>
+              </div>
+              <div class="employee-contact">
+                <mat-icon class="contact-icon">phone</mat-icon>
+                <span>{{ employee.phone }}</span>
+              </div>
+              <div class="employee-stats expanded-stats">
+                <div class="stat-item">
+                  <mat-icon class="stat-icon">schedule</mat-icon>
+                  <span>{{ employee.totalHoursThisWeek }}h this week</span>
+                </div>
+                <div class="stat-item">
+                  <mat-icon class="stat-icon">star</mat-icon>
+                  <span
+                    >{{
+                      employee.hourlyRate
+                        | currency : "EUR" : "symbol" : "1.0-0"
+                    }}/hr</span
+                  >
+                </div>
+                <div class="stat-item">
+                  <mat-icon class="stat-icon">work</mat-icon>
+                  <span>{{ employee.status }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="employee-actions">
+              <button
+                mat-icon-button
+                (click)="
+                  quickScheduleEmployee(employee); $event.stopPropagation()
+                "
+                matTooltip="Quick Schedule"
+                color="primary"
+              >
+                <mat-icon>add_task</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                (click)="
+                  showEmployeeDetails(employee); $event.stopPropagation()
+                "
+                matTooltip="View Details"
+                color="accent"
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="empty-state"
+            *ngIf="
+              filteredAvailableEmployees.length === 0 &&
+              availableEmployees.length > 0
+            "
+          >
+            <mat-icon>search_off</mat-icon>
+            <p>No employees match your search</p>
+          </div>
+
+          <div class="empty-state" *ngIf="availableEmployees.length === 0">
+            <mat-icon>people_outline</mat-icon>
+            <p>All employees are currently scheduled</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheduled Employees Card -->
+      <div
+        class="sidebar-panel scheduled-employees-panel"
+        *ngIf="scheduledEmployees.length > 0"
+      >
+        <div class="panel-header">
+          <h3>
+            <mat-icon>assignment_ind</mat-icon>
+            Scheduled Employees
+            <span class="count-badge busy">{{
+              scheduledEmployees.length
+            }}</span>
+          </h3>
+        </div>
+
+        <div class="panel-content scrollable-content">
+          <div
+            class="employee-card scheduled"
+            *ngFor="let employee of scheduledEmployees"
+            (click)="showEmployeeDetails(employee)"
+          >
+            <div class="employee-avatar large-avatar busy">
+              <img
+                *ngIf="employee.profileImage"
+                [src]="employee.profileImage"
+                [alt]="employee.firstName"
+              />
+              <span *ngIf="!employee.profileImage"
+                >{{ employee.firstName.charAt(0)
+                }}{{ employee.lastName.charAt(0) }}</span
+              >
+            </div>
+
+            <div class="employee-info expanded-info">
+              <div class="employee-name">
+                {{ employee.firstName }} {{ employee.lastName }}
+              </div>
+              <div class="employee-status">
+                {{ employee.currentSchedules.length }} active schedule(s)
+              </div>
+              <div class="employee-position">{{ employee.position }}</div>
+              <div class="employee-schedules">
+                <div
+                  class="schedule-item"
+                  *ngFor="let schedule of employee.currentSchedules.slice(0, 2)"
+                >
+                  <mat-icon class="schedule-icon">event</mat-icon>
+                  <span
+                    >{{ schedule.startTime }} -
+                    {{ getObjectName(schedule.object) }}</span
+                  >
+                </div>
+                <div
+                  class="more-schedules"
+                  *ngIf="employee.currentSchedules.length > 2"
+                >
+                  <span>+{{ employee.currentSchedules.length - 2 }} more</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="employee-actions">
+              <button
+                mat-icon-button
+                (click)="
+                  showEmployeeDetails(employee); $event.stopPropagation()
+                "
+                matTooltip="View Details"
+                color="accent"
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Contracts Card -->
+      <div class="sidebar-panel contracts-panel">
+        <div class="panel-header">
+          <h3>
+            <mat-icon>description</mat-icon>
+            Available Contracts
+            <span class="count-badge">{{ contracts.length }}</span>
+          </h3>
+        </div>
+
+        <!-- Contract Search -->
+        <div class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search contracts...</mat-label>
+            <input
+              matInput
+              [(ngModel)]="contractSearchTerm"
+              (input)="filterContracts()"
+              placeholder="Search by customer or contract number"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="panel-content scrollable-content">
+          <div
+            class="contract-card"
+            *ngFor="let contract of filteredContracts"
+            (click)="showContractDetails(contract)"
+          >
+            <div class="contract-header expanded-header">
+              <div class="contract-customer">
+                {{
+                  contract.customer?.name ||
+                    contract.customerName ||
+                    "Unknown Customer"
+                }}
+              </div>
+              <div class="contract-id">
+                #{{ contract.contractNumber || contract._id.substring(0, 6) }}
+              </div>
+            </div>
+
+            <div class="contract-details expanded-details">
+              <div class="contract-info-row">
+                <mat-icon class="info-icon">business</mat-icon>
+                <span class="info-label">Customer:</span>
+                <span class="info-value">{{
+                  contract.customer?.name || contract.customerName || "N/A"
+                }}</span>
+              </div>
+
+              <div class="contract-info-row" *ngIf="contract.customer?.email">
+                <mat-icon class="info-icon">email</mat-icon>
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ contract.customer?.email }}</span>
+              </div>
+
+              <div class="contract-info-row" *ngIf="contract.customer?.phone">
+                <mat-icon class="info-icon">phone</mat-icon>
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{ contract.customer?.phone }}</span>
+              </div>
+
+              <div class="contract-services">
+                <mat-icon class="service-icon">cleaning_services</mat-icon>
+                <span
+                  >{{
+                    (contract.services && contract.services.length) || 1
+                  }}
+                  service(s)</span
+                >
+                <div
+                  class="service-list"
+                  *ngIf="contract.services && contract.services.length > 0"
+                >
+                  <div
+                    class="service-item"
+                    *ngFor="let service of contract.services.slice(0, 2)"
+                  >
+                    • {{ service.name }} ({{ service.frequency }})
+                  </div>
+                  <div
+                    class="more-services"
+                    *ngIf="contract.services.length > 2"
+                  >
+                    +{{ contract.services.length - 2 }} more services
+                  </div>
+                </div>
+              </div>
+
+              <div class="contract-amount-section">
+                <div class="contract-amount">
+                  {{
+                    contract.totalAmount | currency : "EUR" : "symbol" : "1.0-0"
+                  }}
+                </div>
+                <div
+                  class="billing-frequency"
+                  *ngIf="contract.billingFrequency"
+                >
+                  {{ contract.billingFrequency }}
+                </div>
+              </div>
+            </div>
+
+            <div class="contract-status">
+              <span
+                class="status-badge"
+                [ngClass]="
+                  'status-' + (contract.status || 'active').toLowerCase()
+                "
+              >
+                {{ contract.status || "Active" }}
+              </span>
+            </div>
+
+            <div class="contract-actions">
+              <button
+                mat-icon-button
+                (click)="scheduleContract(contract); $event.stopPropagation()"
+                matTooltip="Schedule Contract"
+                color="primary"
+              >
+                <mat-icon>event_available</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                (click)="
+                  showContractDetails(contract); $event.stopPropagation()
+                "
+                matTooltip="View Details"
+                color="accent"
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="empty-state"
+            *ngIf="filteredContracts.length === 0 && contracts.length > 0"
+          >
+            <mat-icon>search_off</mat-icon>
+            <p>No contracts match your search</p>
+          </div>
+
+          <div class="empty-state" *ngIf="contracts.length === 0">
+            <mat-icon>description</mat-icon>
+            <p>No contracts available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" *ngIf="loading">
+  <div class="loading-content">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading schedule data...</p>
+  </div>
+</div>
+
+<!-- Employee Details Modal -->
+<div
+  class="modal-overlay"
+  *ngIf="selectedEmployee"
+  (click)="closeEmployeeDetails()"
+>
+  <div class="modal-content employee-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <div class="employee-avatar small">
+          <img
+            *ngIf="selectedEmployee.profileImage"
+            [src]="selectedEmployee.profileImage"
+            [alt]="selectedEmployee.firstName"
+          />
+          <span *ngIf="!selectedEmployee.profileImage"
+            >{{ selectedEmployee.firstName.charAt(0)
+            }}{{ selectedEmployee.lastName.charAt(0) }}</span
+          >
+        </div>
+        {{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}
+      </h3>
+      <button mat-icon-button (click)="closeEmployeeDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="employee-details-grid">
+        <div class="detail-item">
+          <label>Position:</label>
+          <span>{{ selectedEmployee.position }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span
+            class="status-badge"
+            [ngClass]="
+              'status-' +
+              selectedEmployee.status.toLowerCase().replace(' ', '-')
+            "
+          >
+            {{ selectedEmployee.status }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Hourly Rate:</label>
+          <span>{{
+            selectedEmployee.hourlyRate | currency : "EUR" : "symbol" : "1.2-2"
+          }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Hours This Week:</label>
+          <span>{{ selectedEmployee.totalHoursThisWeek }} hours</span>
+        </div>
+        <div class="detail-item">
+          <label>Department:</label>
+          <span>{{ selectedEmployee.department }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Employment Type:</label>
+          <span>{{ selectedEmployee.employmentType }}</span>
+        </div>
+      </div>
+
+      <div class="skills-section" *ngIf="selectedEmployee.skills?.length">
+        <h4>Skills</h4>
+        <div class="skills-list">
+          <span
+            class="skill-chip"
+            *ngFor="let skill of selectedEmployee.skills"
+            >{{ skill }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button mat-button (click)="closeEmployeeDetails()">Close</button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="quickScheduleEmployee(selectedEmployee)"
+      >
+        Schedule Employee
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Contract Details Modal -->
+<div
+  class="modal-overlay"
+  *ngIf="selectedContract"
+  (click)="closeContractDetails()"
+>
+  <div class="modal-content contract-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        Contract Details -
+        {{
+          selectedContract.customer?.name ||
+            selectedContract.customerName ||
+            "Unknown Customer"
+        }}
+      </h3>
+      <button mat-icon-button (click)="closeContractDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="contract-details-grid">
+        <div class="detail-section">
+          <h4>Customer Information</h4>
+          <div class="detail-item">
+            <label>Name:</label>
+            <span>{{
+              selectedContract.customer?.name ||
+                selectedContract.customerName ||
+                "Unknown Customer"
+            }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedContract.customer?.email">
+            <label>Email:</label>
+            <span>{{ selectedContract.customer?.email }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedContract.customer?.phone">
+            <label>Phone:</label>
+            <span>{{ selectedContract.customer?.phone }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Contract Information</h4>
+          <div class="detail-item">
+            <label>Contract ID:</label>
+            <span>{{
+              selectedContract.contractNumber ||
+                selectedContract._id.substring(0, 8)
+            }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Status:</label>
+            <span
+              class="status-badge"
+              [ngClass]="
+                'status-' + (selectedContract.status || 'active').toLowerCase()
+              "
+            >
+              {{ selectedContract.status || "Active" }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Total Amount:</label>
+            <span>{{
+              selectedContract.totalAmount
+                | currency : "EUR" : "symbol" : "1.2-2"
+            }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedContract.billingFrequency">
+            <label>Billing:</label>
+            <span>{{ selectedContract.billingFrequency }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="services-section" *ngIf="selectedContract.services?.length">
+        <h4>Services</h4>
+        <div class="services-list">
+          <div
+            class="service-item"
+            *ngFor="let service of selectedContract.services"
+          >
+            <div class="service-header">
+              <span class="service-name">{{ service.name }}</span>
+              <span class="service-price">{{
+                service.price | currency : "EUR" : "symbol" : "1.0-0"
+              }}</span>
+            </div>
+            <div class="service-details">
+              <span class="service-description">{{ service.description }}</span>
+              <span class="service-frequency">{{ service.frequency }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button mat-button (click)="closeContractDetails()">Close</button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="scheduleContract(selectedContract)"
+      >
+        Schedule This Contract
+      </button>
+    </div>
+  </div>
+</div>
