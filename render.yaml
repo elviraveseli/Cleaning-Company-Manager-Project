@@ -4,8 +4,9 @@ services:
     name: cleaning-manager-api
     runtime: node
     rootDir: .
-    buildCommand: cd backend && npm install
+    buildCommand: mkdir -p server && cp -r backend/* server/ && cd backend && npm install
     startCommand: cd backend && npm start
+
     envVars:
       - key: NODE_ENV
         value: production
