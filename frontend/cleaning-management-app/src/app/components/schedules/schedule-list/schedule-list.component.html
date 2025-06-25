@@ -1,0 +1,197 @@
+<div class="schedule-list-container">
+  <!-- Header Section with Stats -->
+  <div class="header-section">
+    <div class="title-section">
+      <h1>Schedule Management</h1>
+      <!-- Stats Cards -->
+      <div class="stats-container">
+        <mat-card>
+          <mat-card-content>
+            <div class="stat-item">
+              <mat-icon>today</mat-icon>
+              <div class="stat-details">
+                <span class="stat-label">Today's Schedules</span>
+                <span class="stat-value">{{getTodaySchedulesCount()}}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-content>
+            <div class="stat-item">
+              <mat-icon>pending</mat-icon>
+              <div class="stat-details">
+                <span class="stat-label">Pending</span>
+                <span class="stat-value">{{getPendingSchedulesCount()}}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-content>
+            <div class="stat-item">
+              <mat-icon>check_circle</mat-icon>
+              <div class="stat-details">
+                <span class="stat-label">Completed</span>
+                <span class="stat-value">{{getCompletedSchedulesCount()}}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openScheduleDialog()" class="create-button">
+      <mat-icon>add</mat-icon> Create Schedule
+    </button>
+  </div>
+
+  <!-- Filter Section -->
+  <mat-card class="filter-section">
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="search-field">
+        <mat-form-field appearance="outline" class="search-input">
+          <mat-label>Search Schedules</mat-label>
+          <input matInput formControlName="searchTerm" placeholder="Search by customer, location, or employee">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option [value]="null">All Statuses</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              <mat-icon [class]="'status-icon ' + status.toLowerCase()">{{getStatusIcon(status)}}</mat-icon>
+              {{ status }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority">
+            <mat-option [value]="null">All Priorities</mat-option>
+            <mat-option *ngFor="let priority of priorityOptions" [value]="priority">
+              <mat-icon [class]="'priority-icon ' + priority.toLowerCase()">{{getPriorityIcon(priority)}}</mat-icon>
+              {{ priority }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date Range</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate formControlName="dateFrom" placeholder="Start date">
+            <input matEndDate formControlName="dateTo" placeholder="End date">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
+
+        <button mat-stroked-button color="primary" (click)="resetFilters()" class="reset-button">
+          <mat-icon>refresh</mat-icon> Reset
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Schedule Cards -->
+  <div class="schedule-cards" *ngIf="!loading">
+    <mat-card *ngFor="let schedule of filteredSchedules" class="schedule-card" [class]="'status-' + schedule.status.toLowerCase()">
+      <mat-card-header>
+        <div mat-card-avatar [class]="'priority-indicator priority-' + schedule.priority.toLowerCase()">
+          <mat-icon>{{getPriorityIcon(schedule.priority)}}</mat-icon>
+        </div>
+        <mat-card-title>{{getCustomerName(schedule)}}</mat-card-title>
+        <mat-card-subtitle>
+          <mat-icon>location_on</mat-icon>
+          {{getLocationName(schedule)}}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="schedule-details">
+          <div class="detail-row">
+            <mat-icon>event</mat-icon>
+            <span>{{schedule.scheduledDate | date:'fullDate'}}</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon>schedule</mat-icon>
+            <span>{{schedule.startTime}} - {{schedule.endTime}}</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon>cleaning_services</mat-icon>
+            <span>{{schedule.cleaningType}}</span>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="employees-section">
+          <h4>
+            <mat-icon>people</mat-icon>
+            Assigned Team
+          </h4>
+          <div class="employee-chips">
+            <mat-chip-row *ngFor="let emp of getEmployeeList(schedule)" 
+                       [matTooltip]="emp.role"
+                       [class]="'role-' + emp.role.toLowerCase()">
+              <mat-icon>person</mat-icon>
+              {{emp.name}}
+            </mat-chip-row>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-icon-button [matMenuTriggerFor]="statusMenu" 
+                [matTooltip]="'Current Status: ' + schedule.status">
+          <mat-icon [class]="'status-icon ' + schedule.status.toLowerCase()">
+            {{getStatusIcon(schedule.status)}}
+          </mat-icon>
+        </button>
+        <mat-menu #statusMenu="matMenu">
+          <button mat-menu-item *ngFor="let status of statusOptions" 
+                  (click)="updateStatus(schedule._id || '', status)"
+                  [disabled]="schedule.status === status">
+            <mat-icon [class]="'status-icon ' + status.toLowerCase()">
+              {{getStatusIcon(status)}}
+            </mat-icon>
+            <span>{{status}}</span>
+          </button>
+        </mat-menu>
+        
+        <button mat-button color="primary" (click)="openScheduleDialog(schedule, $event)">
+          <mat-icon>edit</mat-icon> Edit
+        </button>
+        <button mat-button color="warn" (click)="deleteSchedule(schedule._id, $event)">
+          <mat-icon>delete</mat-icon> Delete
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- No Results Message -->
+    <div *ngIf="filteredSchedules.length === 0" class="no-results">
+      <mat-icon>search_off</mat-icon>
+      <h3>No schedules found</h3>
+      <p>Try adjusting your filters or create a new schedule</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator 
+    [length]="totalSchedules"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (page)="handlePageEvent($event)"
+    aria-label="Select page">
+  </mat-paginator>
+</div>

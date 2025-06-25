@@ -1,0 +1,486 @@
+<div class="form-container">
+  <!-- Form Header -->
+  <div class="form-header">
+    <h1>{{ isEditMode ? "Edit" : "Create" }} Employee Contract</h1>
+    <p>
+      {{
+        isEditMode
+          ? "Update the employee contract details"
+          : "Fill in the details to create a new employee contract"
+      }}
+    </p>
+  </div>
+
+  <!-- Main Form Content -->
+  <div class="form-content">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Loading contract details...</span>
+    </div>
+
+    <form [formGroup]="contractForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+      <!-- Employee Selection -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Employee Information</h2>
+          <mat-icon class="section-icon">person</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Employee</mat-label>
+            <mat-select formControlName="employeeId" required>
+              <mat-option
+                *ngFor="let employee of employees"
+                [value]="employee._id"
+              >
+                {{ employee.firstName }} {{ employee.lastName }} -
+                {{ employee.email }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="contractForm.get('employeeId')?.hasError('required')"
+            >
+              Employee selection is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Contract Details -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Contract Details</h2>
+          <mat-icon class="section-icon">description</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Contract Type</mat-label>
+            <mat-select formControlName="contractType" required>
+              <mat-option *ngFor="let type of contractTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="contractForm.get('contractType')?.hasError('required')"
+            >
+              Contract type is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status" required>
+              <mat-option *ngFor="let status of statusTypes" [value]="status">
+                {{ status }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="contractForm.get('status')?.hasError('required')">
+              Status is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              formControlName="startDate"
+              required
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="startPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-error
+              *ngIf="contractForm.get('startDate')?.hasError('required')"
+            >
+              Start date is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>End Date (Optional)</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              formControlName="endDate"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="endPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Compensation -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Compensation</h2>
+          <mat-icon class="section-icon">euro</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Salary</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="salary"
+              required
+              min="0"
+            />
+            <span matTextPrefix>€&nbsp;</span>
+            <mat-error *ngIf="contractForm.get('salary')?.hasError('required')">
+              Salary is required
+            </mat-error>
+            <mat-error *ngIf="contractForm.get('salary')?.hasError('min')">
+              Salary must be greater than 0
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Payment Frequency</mat-label>
+            <mat-select formControlName="paymentFrequency" required>
+              <mat-option
+                *ngFor="let frequency of paymentFrequencies"
+                [value]="frequency"
+              >
+                {{ frequency }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="contractForm.get('paymentFrequency')?.hasError('required')"
+            >
+              Payment frequency is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Working Hours -->
+      <div class="form-section" formGroupName="workingHours">
+        <div class="section-header">
+          <h2>Working Hours</h2>
+          <mat-icon class="section-icon">schedule</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Weekly Hours</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="weeklyHours"
+              required
+              min="1"
+              max="168"
+            />
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('workingHours.weeklyHours')
+                  ?.hasError('required')
+              "
+            >
+              Weekly hours is required
+            </mat-error>
+            <mat-error
+              *ngIf="
+                contractForm.get('workingHours.weeklyHours')?.hasError('min')
+              "
+            >
+              Weekly hours must be at least 1
+            </mat-error>
+            <mat-error
+              *ngIf="
+                contractForm.get('workingHours.weeklyHours')?.hasError('max')
+              "
+            >
+              Weekly hours cannot exceed 168
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Schedule Type</mat-label>
+            <mat-select formControlName="scheduleType" required>
+              <mat-option *ngFor="let type of scheduleTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('workingHours.scheduleType')
+                  ?.hasError('required')
+              "
+            >
+              Schedule type is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Leave Entitlement -->
+      <div class="form-section" formGroupName="leaveEntitlement">
+        <div class="section-header">
+          <h2>Leave Entitlement</h2>
+          <mat-icon class="section-icon">beach_access</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Annual Leave (days)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="annualLeave"
+              required
+              min="0"
+            />
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('leaveEntitlement.annualLeave')
+                  ?.hasError('required')
+              "
+            >
+              Annual leave is required
+            </mat-error>
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('leaveEntitlement.annualLeave')
+                  ?.hasError('min')
+              "
+            >
+              Annual leave cannot be negative
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Sick Leave (days)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="sickLeave"
+              required
+              min="0"
+            />
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('leaveEntitlement.sickLeave')
+                  ?.hasError('required')
+              "
+            >
+              Sick leave is required
+            </mat-error>
+            <mat-error
+              *ngIf="
+                contractForm.get('leaveEntitlement.sickLeave')?.hasError('min')
+              "
+            >
+              Sick leave cannot be negative
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Paid Holidays (days)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="paidHolidays"
+              required
+              min="0"
+            />
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('leaveEntitlement.paidHolidays')
+                  ?.hasError('required')
+              "
+            >
+              Paid holidays is required
+            </mat-error>
+            <mat-error
+              *ngIf="
+                contractForm
+                  .get('leaveEntitlement.paidHolidays')
+                  ?.hasError('min')
+              "
+            >
+              Paid holidays cannot be negative
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Benefits Package</h2>
+          <mat-icon class="section-icon">card_giftcard</mat-icon>
+        </div>
+        <div class="benefits-selection">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Benefits</mat-label>
+            <mat-select #benefitSelect>
+              <mat-option
+                *ngFor="let benefit of availableBenefits"
+                [value]="benefit"
+              >
+                {{ benefit }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            (click)="addBenefit(benefitSelect.value); benefitSelect.value = ''"
+            [disabled]="!benefitSelect.value"
+          >
+            <mat-icon>add</mat-icon>
+            Add Benefit
+          </button>
+        </div>
+
+        <div class="selected-benefits" *ngIf="benefitsFormArray.length > 0">
+          <h4>Selected Benefits:</h4>
+          <div class="benefit-chips">
+            <mat-chip-set>
+              <mat-chip
+                *ngFor="
+                  let benefit of benefitsFormArray.controls;
+                  let i = index
+                "
+                (removed)="removeBenefit(i)"
+              >
+                {{ benefit.value }}
+                <mat-icon matChipRemove>cancel</mat-icon>
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+      </div>
+
+      <!-- Probation Period -->
+      <div class="form-section" formGroupName="probationPeriod">
+        <div class="section-header">
+          <h2>Probation Period (Optional)</h2>
+          <mat-icon class="section-icon">hourglass_empty</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Duration (months)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="duration"
+              min="0"
+              max="12"
+              (change)="onProbationDurationChange()"
+            />
+            <mat-hint>Leave empty if no probation period</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field
+            appearance="outline"
+            *ngIf="contractForm.get('probationPeriod.duration')?.value"
+          >
+            <mat-label>Probation End Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="probationPicker"
+              formControlName="endDate"
+              readonly
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="probationPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #probationPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Terms and Conditions -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Terms and Conditions</h2>
+          <mat-icon class="section-icon">gavel</mat-icon>
+        </div>
+        <div class="terms-section">
+          <div class="terms-header">
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              (click)="addTerm()"
+            >
+              <mat-icon>add</mat-icon>
+              Add Term
+            </button>
+          </div>
+
+          <div class="terms-list" *ngIf="termsFormArray.length > 0">
+            <div
+              *ngFor="let term of termsFormArray.controls; let i = index"
+              class="term-item"
+            >
+              <mat-form-field appearance="outline" class="term-input">
+                <mat-label>Term {{ i + 1 }}</mat-label>
+                <textarea
+                  matInput
+                  [formControl]="getTermControl(i)"
+                  rows="2"
+                  required
+                ></textarea>
+                <mat-error *ngIf="getTermControl(i).hasError('required')">
+                  This term is required
+                </mat-error>
+              </mat-form-field>
+              <button
+                type="button"
+                mat-icon-button
+                color="warn"
+                (click)="removeTerm(i)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="no-terms" *ngIf="termsFormArray.length === 0">
+            <p>No terms added yet. Click "Add Term" to add contract terms.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="onCancel()"
+          [disabled]="isLoading"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="isLoading || contractForm.invalid"
+        >
+          <mat-icon>save</mat-icon>
+          {{ isEditMode ? "Update Contract" : "Create Contract" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

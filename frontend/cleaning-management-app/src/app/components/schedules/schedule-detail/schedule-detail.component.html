@@ -1,0 +1,293 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? "Edit Schedule" : "Create New Schedule" }}
+</h2>
+
+<form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content>
+    <!-- Basic Schedule Information -->
+    <div class="form-section">
+      <h3>Schedule Information</h3>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="picker"
+            formControlName="scheduledDate"
+            required
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="picker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="scheduleForm.get('scheduledDate')?.invalid"
+            >Date is required</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Start Time</mat-label>
+          <input 
+            matInput 
+            placeholder="HH:mm" 
+            formControlName="startTime" 
+            pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+            required 
+          />
+          <mat-hint>Enter time in 24-hour format (e.g., 09:00)</mat-hint>
+          <mat-error *ngIf="scheduleForm.get('startTime')?.errors?.['required']">Start time is required</mat-error>
+          <mat-error *ngIf="scheduleForm.get('startTime')?.errors?.['pattern']">Please enter a valid time (HH:mm)</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Time</mat-label>
+          <input 
+            matInput 
+            placeholder="HH:mm" 
+            formControlName="endTime" 
+            pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+            required 
+          />
+          <mat-hint>Enter time in 24-hour format (e.g., 17:00)</mat-hint>
+          <mat-error *ngIf="scheduleForm.get('endTime')?.errors?.['required']">End time is required</mat-error>
+          <mat-error *ngIf="scheduleForm.get('endTime')?.errors?.['pattern']">Please enter a valid time (HH:mm)</mat-error>
+          <mat-error *ngIf="scheduleForm.get('endTime')?.errors?.['invalidEndTime']">End time must be after start time</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Customer Contract</mat-label>
+          <mat-select formControlName="customerContractId" required>
+            <mat-option
+              *ngFor="let contract of filteredContracts"
+              [value]="contract._id"
+            >
+              {{ contract.customer.name }} - {{ contract.contractNumber }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="scheduleForm.get('customerContractId')?.invalid"
+            >Customer contract is required</mat-error
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Location</mat-label>
+          <mat-select formControlName="objectId" required>
+            <mat-option *ngFor="let object of objectOptions" [value]="object._id">
+              {{ object.name }}
+              <ng-container *ngIf="object.address && (object.address.street || object.address.city)">
+                - {{ object.address.street || '' }}{{ object.address.street && object.address.city ? ', ' : '' }}{{ object.address.city || '' }}
+              </ng-container>
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="objectOptions.length === 0">No locations available for this contract</mat-hint>
+          <mat-error *ngIf="scheduleForm.get('objectId')?.invalid">Location is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status" required>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{ status }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="scheduleForm.get('status')?.invalid"
+            >Status is required</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority" required>
+            <mat-option
+              *ngFor="let priority of priorityOptions"
+              [value]="priority"
+            >
+              {{ priority }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="scheduleForm.get('priority')?.invalid"
+            >Priority is required</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Cleaning Type</mat-label>
+          <mat-select formControlName="cleaningType" required>
+            <mat-option
+              *ngFor="let type of cleaningTypeOptions"
+              [value]="type"
+            >
+              {{ type }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="scheduleForm.get('cleaningType')?.invalid"
+            >Cleaning type is required</mat-error
+          >
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Employee Assignments -->
+    <div class="form-section">
+      <div class="section-header">
+        <h3>Assigned Employees</h3>
+        <button
+          type="button"
+          mat-mini-fab
+          color="primary"
+          (click)="addEmployee()"
+          [disabled]="employeesArray.length >= 2"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <div class="employee-list">
+        <div *ngIf="employeesArray.length === 0" class="no-employees">
+          <p>No employees assigned. Add up to 2 employees.</p>
+        </div>
+
+        <div
+          *ngFor="let employeeGroup of employeesArray.controls; let i = index"
+          class="employee-item"
+        >
+          <div [formGroup]="$any(employeeGroup)" class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Employee</mat-label>
+              <mat-select formControlName="employee" required>
+                <mat-option
+                  *ngFor="let employee of filteredEmployees"
+                  [value]="employee._id"
+                >
+                  {{ employee.firstName }} {{ employee.lastName }} -
+                  {{ employee.position }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="employeeGroup.get('employee')?.invalid"
+                >Employee is required</mat-error
+              >
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Role</mat-label>
+              <mat-select formControlName="role" required>
+                <mat-option value="Primary">Primary</mat-option>
+                <mat-option value="Secondary">Secondary</mat-option>
+                <mat-option value="Supervisor">Supervisor</mat-option>
+              </mat-select>
+              <mat-error *ngIf="employeeGroup.get('role')?.invalid"
+                >Role is required</mat-error
+              >
+            </mat-form-field>
+
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="removeEmployee(i)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="form-section">
+      <div class="section-header">
+        <h3>Tasks</h3>
+        <button
+          type="button"
+          mat-mini-fab
+          color="primary"
+          (click)="addTask()"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <div class="tasks-list">
+        <div
+          *ngFor="let taskGroup of tasksArray.controls; let i = index"
+          class="task-item"
+        >
+          <div [formGroup]="$any(taskGroup)" class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Task Name</mat-label>
+              <input
+                matInput
+                formControlName="name"
+                placeholder="Enter task name"
+                required
+              />
+              <mat-error *ngIf="taskGroup.get('name')?.invalid"
+                >Name is required</mat-error
+              >
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="task-description">
+              <mat-label>Task Description</mat-label>
+              <input
+                matInput
+                formControlName="description"
+                placeholder="Enter task description"
+                required
+              />
+              <mat-error *ngIf="taskGroup.get('description')?.invalid"
+                >Description is required</mat-error
+              >
+            </mat-form-field>
+
+            <mat-checkbox formControlName="completed" color="primary"
+              >Completed</mat-checkbox
+            >
+
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="removeTask(i)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-section">
+      <h3>Notes</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Additional Notes</mat-label>
+        <textarea
+          matInput
+          formControlName="notes"
+          rows="3"
+          placeholder="Enter any additional notes or instructions"
+        ></textarea>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button type="button" mat-button (click)="cancel()">Cancel</button>
+    <button
+      type="submit"
+      mat-raised-button
+      color="primary"
+      [disabled]="scheduleForm.invalid || submitting"
+    >
+      {{ submitting ? "Saving..." : (isEdit ? "Update" : "Create") }}
+    </button>
+  </mat-dialog-actions>
+</form>

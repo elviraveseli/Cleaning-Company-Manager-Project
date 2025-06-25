@@ -1,0 +1,714 @@
+<div class="employee-form-container">
+  <!-- Form Header -->
+  <div class="form-header">
+    <h1>{{ isEditMode ? "Edit" : "New" }} Employee</h1>
+    <p>
+      {{
+        isEditMode
+          ? "Update employee information"
+          : "Create a new employee profile"
+      }}
+    </p>
+  </div>
+
+  <!-- Main Form Content -->
+  <div class="form-content">
+    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Basic Information</h2>
+          <mat-icon class="section-icon">person</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="firstName" required />
+            <mat-error
+              *ngIf="employeeForm.get('firstName')?.hasError('required')"
+            >
+              First name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="lastName" required />
+            <mat-error
+              *ngIf="employeeForm.get('lastName')?.hasError('required')"
+            >
+              Last name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" required type="email" />
+            <mat-error *ngIf="employeeForm.get('email')?.hasError('required')">
+              Email is required
+            </mat-error>
+            <mat-error *ngIf="employeeForm.get('email')?.hasError('email')">
+              Please enter a valid email address
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" required />
+            <mat-error *ngIf="employeeForm.get('phone')?.hasError('required')">
+              Phone number is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Hire Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="picker"
+              formControlName="hireDate"
+              required
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="picker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error
+              *ngIf="employeeForm.get('hireDate')?.hasError('required')"
+            >
+              Hire date is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Hourly Rate ($)</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="hourlyRate"
+              required
+              min="0"
+            />
+            <mat-error
+              *ngIf="employeeForm.get('hourlyRate')?.hasError('required')"
+            >
+              Hourly rate is required
+            </mat-error>
+            <mat-error *ngIf="employeeForm.get('hourlyRate')?.hasError('min')">
+              Hourly rate must be positive
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Employment Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Employment Details</h2>
+          <mat-icon class="section-icon">work</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Position</mat-label>
+            <mat-select formControlName="position" required>
+              <mat-option
+                *ngFor="let pos of employeeService.positions"
+                [value]="pos"
+              >
+                {{ pos }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('position')?.hasError('required')"
+            >
+              Position is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="department" required>
+              <mat-option
+                *ngFor="let dept of employeeService.departments"
+                [value]="dept"
+              >
+                {{ dept }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('department')?.hasError('required')"
+            >
+              Department is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Employment Type</mat-label>
+            <mat-select formControlName="employmentType" required>
+              <mat-option
+                *ngFor="let type of employeeService.employmentTypes"
+                [value]="type"
+              >
+                {{ type }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('employmentType')?.hasError('required')"
+            >
+              Employment type is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status" required>
+              <mat-option value="Active">Active</mat-option>
+              <mat-option value="Inactive">Inactive</mat-option>
+              <mat-option value="On Leave">On Leave</mat-option>
+            </mat-select>
+            <mat-error *ngIf="employeeForm.get('status')?.hasError('required')">
+              Status is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Availability</mat-label>
+            <mat-select formControlName="availability" required>
+              <mat-option
+                *ngFor="let option of employeeService.availabilityOptions"
+                [value]="option"
+              >
+                {{ option }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('availability')?.hasError('required')"
+            >
+              Availability is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Contact Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Contact Information</h2>
+          <mat-icon class="section-icon">contact_mail</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Address</mat-label>
+            <input matInput formControlName="address" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Municipality</mat-label>
+            <mat-select formControlName="municipality" required>
+              <mat-option
+                *ngFor="let municipality of employeeService.municipalities"
+                [value]="municipality"
+              >
+                {{ municipality }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('municipality')?.hasError('required')"
+            >
+              Municipality is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Nationality</mat-label>
+            <mat-select formControlName="nationality" required>
+              <mat-option
+                *ngFor="let nationality of employeeService.kosovoNationalities"
+                [value]="nationality"
+              >
+                {{ nationality }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="employeeForm.get('nationality')?.hasError('required')"
+            >
+              Nationality is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Personal Number</mat-label>
+            <input
+              matInput
+              formControlName="personalNumber"
+              placeholder="10 digits for Kosovo citizens"
+              maxlength="10"
+            />
+            <mat-error *ngIf="employeeForm.get('personalNumber')?.hasError('pattern')">
+              Personal number must be exactly 10 digits
+            </mat-error>
+            <mat-hint>Required for Kosovo citizens (10 digits)</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div formGroupName="emergencyContact" class="emergency-contact">
+          <h3>Emergency Contact</h3>
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" required />
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('emergencyContact')
+                    ?.get('name')
+                    ?.hasError('required')
+                "
+              >
+                Emergency contact name is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Relationship</mat-label>
+              <input matInput formControlName="relationship" required />
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('emergencyContact')
+                    ?.get('relationship')
+                    ?.hasError('required')
+                "
+              >
+                Relationship is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone" required />
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('emergencyContact')
+                    ?.get('phone')
+                    ?.hasError('required')
+                "
+              >
+                Emergency contact phone is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Languages Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Languages</h2>
+          <mat-icon class="section-icon">language</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Languages Spoken</mat-label>
+            <mat-chip-grid #langGrid>
+              <mat-chip-row
+                *ngFor="let lang of languages"
+                (removed)="removeLanguage(lang)"
+              >
+                {{ lang }}
+                <button matChipRemove>
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+              <input
+                placeholder="Add language..."
+                [matChipInputFor]="langGrid"
+                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                [matAutocomplete]="langAuto"
+                formControlName="languageInput"
+                (matChipInputTokenEnd)="addLanguage($event)"
+              />
+            </mat-chip-grid>
+            <mat-autocomplete
+              #langAuto="matAutocomplete"
+              (optionSelected)="addLanguage($event)"
+            >
+              <mat-option
+                *ngFor="let lang of filteredLanguages | async"
+                [value]="lang"
+              >
+                {{ lang }}
+              </mat-option>
+            </mat-autocomplete>
+            <mat-hint
+              >Select languages the employee can speak with customers</mat-hint
+            >
+          </mat-form-field>
+        </div>
+
+        <!-- Optional Skills Section (Collapsed by default) -->
+        <details class="optional-section">
+          <summary>Additional Skills & Certifications (Optional)</summary>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Cleaning Skills</mat-label>
+              <mat-chip-grid #chipGrid>
+                <mat-chip-row
+                  *ngFor="let skill of skills"
+                  (removed)="removeSkill(skill)"
+                >
+                  {{ skill }}
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+                <input
+                  placeholder="Add skill..."
+                  [matChipInputFor]="chipGrid"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  [matAutocomplete]="skillAuto"
+                  formControlName="skillInput"
+                  (matChipInputTokenEnd)="addSkill($event)"
+                />
+              </mat-chip-grid>
+              <mat-autocomplete
+                #skillAuto="matAutocomplete"
+                (optionSelected)="addSkill($event)"
+              >
+                <mat-option
+                  *ngFor="let skill of filteredSkills | async"
+                  [value]="skill"
+                >
+                  {{ skill }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Certifications</mat-label>
+              <mat-chip-grid #certGrid>
+                <mat-chip-row
+                  *ngFor="let cert of certifications"
+                  (removed)="removeCertification(cert)"
+                >
+                  {{ cert }}
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+                <input
+                  placeholder="Add certification..."
+                  [matChipInputFor]="certGrid"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  [matAutocomplete]="certAuto"
+                  formControlName="certificationInput"
+                  (matChipInputTokenEnd)="addCertification($event)"
+                />
+              </mat-chip-grid>
+              <mat-autocomplete
+                #certAuto="matAutocomplete"
+                (optionSelected)="addCertification($event)"
+              >
+                <mat-option
+                  *ngFor="let cert of filteredCertifications | async"
+                  [value]="cert"
+                >
+                  {{ cert }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+        </details>
+      </div>
+
+      <!-- Working Days and Times Section -->
+      <div class="form-section working-days-section">
+        <div class="section-header">
+          <h2>Working Days and Times</h2>
+          <button
+            mat-fab
+            color="primary"
+            (click)="addWorkingDay()"
+            [disabled]="workingDaysFormArray.length >= 7"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div class="working-days-container" formArrayName="workingDays">
+          <div
+            *ngFor="
+              let dayGroup of workingDaysFormArray.controls;
+              let i = index
+            "
+            [formGroupName]="i"
+            class="working-day-card"
+          >
+            <div class="working-day-header">
+              <mat-form-field appearance="outline">
+                <mat-label>Day</mat-label>
+                <mat-select formControlName="day" required>
+                  <mat-option
+                    *ngFor="let day of getAvailableDays(i)"
+                    [value]="day"
+                  >
+                    {{ day }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="removeWorkingDay(i)"
+                class="remove-day-btn"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="working-day-times">
+              <mat-form-field appearance="outline">
+                <mat-label>From</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="from"
+                  required
+                  placeholder="HH:MM"
+                  (input)="calculateDuration($any(workingDaysFormArray.at(i)))"
+                />
+                <mat-icon matSuffix>schedule</mat-icon>
+                <mat-hint>Enter time in 24-hour format (e.g., 09:00)</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>To</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="to"
+                  required
+                  placeholder="HH:MM"
+                  (input)="calculateDuration($any(workingDaysFormArray.at(i)))"
+                />
+                <mat-icon matSuffix>schedule</mat-icon>
+                <mat-hint>Enter time in 24-hour format (e.g., 17:00)</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Duration (hours)</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  formControlName="duration"
+                  readonly
+                />
+                <mat-icon matSuffix>timer</mat-icon>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div
+            *ngIf="workingDaysFormArray.length === 0"
+            class="no-days-message"
+          >
+            <mat-icon>schedule</mat-icon>
+            <p>
+              No working days added. Click the + button to add working days.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Payment Information</h2>
+          <mat-icon class="section-icon">payments</mat-icon>
+        </div>
+        <div formGroupName="paymentInfo">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Bank Name</mat-label>
+              <mat-select formControlName="bankName">
+                <mat-option
+                  *ngFor="let bank of employeeService.kosovoBanks"
+                  [value]="bank"
+                >
+                  {{ bank }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Account Type</mat-label>
+              <mat-select formControlName="accountType">
+                <mat-option
+                  *ngFor="let type of employeeService.accountTypes"
+                  [value]="type"
+                >
+                  {{ type }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Account Number</mat-label>
+              <input
+                matInput
+                formControlName="accountNumber"
+                type="password"
+                required
+              />
+              <mat-icon matSuffix>lock</mat-icon>
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('paymentInfo')
+                    ?.get('accountNumber')
+                    ?.hasError('required')
+                "
+              >
+                Account number is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>IBAN</mat-label>
+              <input
+                matInput
+                formControlName="iban"
+                placeholder="XK21 1234 5678 9012 3456"
+                maxlength="24"
+              />
+              <mat-icon matSuffix>account_balance</mat-icon>
+              <mat-hint>Kosovo IBAN format: XK21 XXXX XXXX XXXX XXXX</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Insurance Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Health Insurance</h2>
+          <mat-icon class="section-icon">health_and_safety</mat-icon>
+        </div>
+        <div formGroupName="healthInsurance">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Insurance Provider</mat-label>
+              <mat-select formControlName="provider" required>
+                <mat-option
+                  *ngFor="
+                    let provider of employeeService.healthInsuranceProviders
+                  "
+                  [value]="provider"
+                >
+                  {{ provider }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('healthInsurance')
+                    ?.get('provider')
+                    ?.hasError('required')
+                "
+              >
+                Insurance provider is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Policy Number</mat-label>
+              <input matInput formControlName="policyNumber" required />
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('healthInsurance')
+                    ?.get('policyNumber')
+                    ?.hasError('required')
+                "
+              >
+                Policy number is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Valid Until</mat-label>
+              <input
+                matInput
+                [matDatepicker]="healthPicker"
+                formControlName="validUntil"
+                required
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="healthPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #healthPicker></mat-datepicker>
+              <mat-error
+                *ngIf="
+                  employeeForm
+                    .get('healthInsurance')
+                    ?.get('validUntil')
+                    ?.hasError('required')
+                "
+              >
+                Valid until date is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Notes Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Additional Notes</h2>
+          <mat-icon class="section-icon">notes</mat-icon>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="4"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="action-buttons">
+        <button mat-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!employeeForm.valid || isSubmitting"
+        >
+          <mat-icon>save</mat-icon>
+          {{ isEditMode ? "Update" : "Create" }} Employee
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,338 @@
+<div class="customer-detail-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading customer details...</p>
+  </div>
+
+  <!-- Customer Details -->
+  <div *ngIf="!isLoading && customer" class="detail-content">
+    <!-- Header Section -->
+    <div class="customer-header">
+      <div class="header-content">
+        <button mat-icon-button (click)="onBackToList()" class="back-button">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+
+        <div class="customer-summary">
+          <div class="customer-avatar">
+            <span>{{ getCustomerInitials() }}</span>
+          </div>
+
+          <div class="customer-basic-info">
+            <h1>{{ customer.firstName }} {{ customer.lastName }}</h1>
+            <p class="customer-type" [style.color]="getTypeColor()">
+              <mat-icon>{{
+                customer.customerType === "Residential" ? "home" : "business"
+              }}</mat-icon>
+              {{ customer.customerType }} Customer
+            </p>
+            <div class="customer-status">
+              <span
+                class="status-badge"
+                [style.background-color]="getStatusColor()"
+              >
+                {{ customer.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customer-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ customer.totalContracts }}</span>
+            <span class="stat-label">Contracts</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{
+              formatCurrency(customer.totalRevenue)
+            }}</span>
+            <span class="stat-label">Revenue</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ getDaysSinceRegistration() }}</span>
+            <span class="stat-label">Days</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button mat-raised-button color="primary" (click)="onEditCustomer()">
+        <mat-icon>edit</mat-icon>
+        Edit Customer
+      </button>
+      <button mat-raised-button (click)="onSendEmail()">
+        <mat-icon>email</mat-icon>
+        Send Email
+      </button>
+      <button mat-raised-button (click)="onCallCustomer()">
+        <mat-icon>phone</mat-icon>
+        Call
+      </button>
+      <button mat-raised-button color="accent" (click)="onCreateContract()">
+        <mat-icon>add</mat-icon>
+        Create Contract
+      </button>
+      <button mat-raised-button (click)="onViewContracts()">
+        <mat-icon>list</mat-icon>
+        View Contracts
+      </button>
+      <button mat-raised-button color="warn" (click)="onDeleteCustomer()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+
+    <!-- Information Grid -->
+    <div class="info-grid">
+      <!-- Contact Information -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>contact_phone</mat-icon>
+          <mat-card-title>Contact Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ customer.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phone:</span>
+            <span class="info-value">{{ customer.phone }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Preferred Contact:</span>
+            <span class="info-value">{{
+              customer.preferredContactMethod
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Company:</span>
+            <span class="info-value">{{ customer.company || "N/A" }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Address Information -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>location_on</mat-icon>
+          <mat-card-title>Service Address</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Address:</span>
+            <span class="info-value">{{ customer.address }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">City:</span>
+            <span class="info-value">{{ customer.city }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Municipality:</span>
+            <span class="info-value">{{ customer.municipality }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Registration Details -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>event</mat-icon>
+          <mat-card-title>Registration Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Registration Date:</span>
+            <span class="info-value">{{
+              formatDate(customer.registrationDate)
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last Service:</span>
+            <span class="info-value">{{
+              formatDate(customer.lastServiceDate)
+            }}</span>
+          </div>
+          <div class="info-row" *ngIf="getDaysSinceLastService() !== null">
+            <span class="info-label">Days Since Service:</span>
+            <span class="info-value">{{ getDaysSinceLastService() }} days</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Referral Source:</span>
+            <span class="info-value">{{
+              customer.referralSource || "Direct"
+            }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Emergency Contact -->
+      <mat-card class="info-card" *ngIf="hasEmergencyContact()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>emergency</mat-icon>
+          <mat-card-title>Emergency Contact</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Name:</span>
+            <span class="info-value">{{
+              customer.emergencyContact?.name
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Relationship:</span>
+            <span class="info-value">{{
+              customer.emergencyContact?.relationship
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phone:</span>
+            <span class="info-value">{{
+              customer.emergencyContact?.phone
+            }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Billing Address -->
+      <mat-card class="info-card" *ngIf="hasBillingAddress()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>receipt</mat-icon>
+          <mat-card-title>Billing Address</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Address:</span>
+            <span class="info-value">{{
+              customer.billingAddress?.address
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">City:</span>
+            <span class="info-value">{{ customer.billingAddress?.city }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Municipality:</span>
+            <span class="info-value">{{
+              customer.billingAddress?.municipality
+            }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Payment Information -->
+      <mat-card class="info-card" *ngIf="hasPaymentInfo()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>payment</mat-icon>
+          <mat-card-title>Payment Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Preferred Method:</span>
+            <span class="info-value">{{
+              customer.paymentInfo?.preferredMethod
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Billing Cycle:</span>
+            <span class="info-value">{{
+              customer.paymentInfo?.billingCycle
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Auto Pay:</span>
+            <span class="info-value">{{
+              customer.paymentInfo?.autoPayEnabled ? "Enabled" : "Disabled"
+            }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Service Preferences -->
+      <mat-card class="info-card" *ngIf="hasServicePreferences()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>settings</mat-icon>
+          <mat-card-title>Service Preferences</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="info-label">Time Preference:</span>
+            <span class="info-value">{{
+              customer.servicePreferences?.timePreference
+            }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Preferred Days:</span>
+            <span class="info-value">{{ getPreferredDaysText() }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Key Access:</span>
+            <span class="info-value">{{
+              customer.servicePreferences?.keyAccess ? "Yes" : "No"
+            }}</span>
+          </div>
+          <div
+            class="info-row"
+            *ngIf="customer.servicePreferences?.specialInstructions"
+          >
+            <span class="info-label">Special Instructions:</span>
+            <span class="info-value">{{
+              customer.servicePreferences?.specialInstructions
+            }}</span>
+          </div>
+          <div
+            class="info-row"
+            *ngIf="customer.servicePreferences?.petInstructions"
+          >
+            <span class="info-label">Pet Instructions:</span>
+            <span class="info-value">{{
+              customer.servicePreferences?.petInstructions
+            }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Tags -->
+      <mat-card
+        class="info-card"
+        *ngIf="customer.tags && customer.tags.length > 0"
+      >
+        <mat-card-header>
+          <mat-icon mat-card-avatar>label</mat-icon>
+          <mat-card-title>Tags</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="tags-container">
+            <mat-chip-listbox>
+              <mat-chip *ngFor="let tag of customer.tags">{{ tag }}</mat-chip>
+            </mat-chip-listbox>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Notes -->
+      <mat-card class="info-card full-width" *ngIf="customer.notes">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>note</mat-icon>
+          <mat-card-title>Notes</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="notes-text">{{ customer.notes }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && !customer" class="error-container">
+    <mat-icon class="error-icon">error</mat-icon>
+    <h2>Customer Not Found</h2>
+    <p>The requested customer could not be found.</p>
+    <button mat-raised-button color="primary" (click)="onBackToList()">
+      Back to Customer List
+    </button>
+  </div>
+</div>

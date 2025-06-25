@@ -1,0 +1,533 @@
+// Employee Detail - Modern Design
+.employee-detail-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 32px 40px;
+
+  // Loading State
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+
+    .loading-card {
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: none;
+
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 40px;
+
+        p {
+          font-size: 1.1rem;
+          color: #6c757d;
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  // Employee Content
+  .employee-content {
+    max-width: 1400px;
+    margin: 0 auto;
+
+    // Header Card
+    .header-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: none;
+      margin-bottom: 32px;
+      overflow: hidden;
+
+      .employee-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 32px;
+
+        .employee-avatar {
+          width: 80px;
+          height: 80px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .employee-basic-info {
+          flex: 1;
+
+          h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 8px 0;
+            line-height: 1.2;
+          }
+
+          .employee-position {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin: 0 0 16px 0;
+            font-weight: 500;
+          }
+
+          .employee-status {
+            .mat-mdc-chip {
+              font-size: 0.9rem;
+              font-weight: 600;
+              padding: 8px 16px;
+              border-radius: 20px;
+
+              &.status-active {
+                background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+                color: #2e7d32;
+                border: 1px solid #81c784;
+              }
+
+              &.status-inactive {
+                background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+                color: #c62828;
+                border: 1px solid #ef5350;
+              }
+
+              &.status-pending {
+                background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+                color: #ef6c00;
+                border: 1px solid #ffb74d;
+              }
+
+              mat-icon {
+                margin-right: 6px;
+                font-size: 16px;
+              }
+            }
+          }
+        }
+
+        .employee-actions {
+          button {
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+            mat-icon {
+              font-size: 24px;
+            }
+          }
+        }
+      }
+    }
+
+    // Details Grid
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+
+      .info-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        mat-card-header {
+          padding: 24px 24px 0 24px;
+
+          mat-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+
+            mat-icon {
+              color: #667eea;
+              font-size: 24px;
+            }
+          }
+
+          mat-card-subtitle {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 8px;
+          }
+        }
+
+        mat-card-content {
+          padding: 20px 24px 24px 24px;
+
+          .info-grid {
+            display: grid;
+            gap: 20px;
+
+            .info-item {
+              label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #6c757d;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+              }
+
+              .info-value {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 1rem;
+                color: #2c3e50;
+
+                mat-icon {
+                  color: #667eea;
+                  font-size: 20px;
+                  width: 20px;
+                  height: 20px;
+                }
+
+                span {
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+        }
+
+        // Schedule Card Specific Styling
+        &.schedule-card {
+          .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+
+            .schedule-item {
+              display: grid;
+              grid-template-columns: 100px 1fr 60px;
+              align-items: center;
+              gap: 16px;
+              padding: 16px;
+              background: #f8f9fa;
+              border-radius: 12px;
+              border-left: 4px solid #667eea;
+
+              .day-name {
+                font-weight: 600;
+                color: #2c3e50;
+                font-size: 0.9rem;
+              }
+
+              .time-range {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.9rem;
+                color: #495057;
+
+                .time {
+                  font-weight: 500;
+                }
+
+                mat-icon {
+                  font-size: 16px;
+                  color: #6c757d;
+                }
+              }
+
+              .duration {
+                font-weight: 600;
+                color: #667eea;
+                text-align: right;
+                font-size: 0.9rem;
+              }
+            }
+          }
+
+          .no-schedule {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 32px;
+            color: #6c757d;
+
+            mat-icon {
+              font-size: 48px;
+              width: 48px;
+              height: 48px;
+              opacity: 0.5;
+            }
+
+            p {
+              margin: 0;
+              font-style: italic;
+            }
+          }
+        }
+
+        // Skills & Certifications
+        .skills-section,
+        .certifications-section {
+          &:not(:last-child) {
+            margin-bottom: 24px;
+          }
+
+          h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 12px 0;
+          }
+
+          .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            .mat-mdc-chip {
+              border-radius: 16px;
+              font-size: 0.8rem;
+              font-weight: 500;
+
+              &.skill-chip {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                color: #1976d2;
+                border: 1px solid #90caf9;
+              }
+
+              &.cert-chip {
+                background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+                color: #2e7d32;
+                border: 1px solid #81c784;
+
+                mat-icon {
+                  font-size: 16px;
+                  margin-right: 4px;
+                }
+              }
+            }
+          }
+        }
+
+        // Notes Card
+        &.notes-card {
+          .notes-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #495057;
+            margin: 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+          }
+        }
+      }
+    }
+
+    // Action Buttons
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      button {
+        height: 48px;
+        border-radius: 12px;
+        font-weight: 500;
+        min-width: 140px;
+
+        mat-icon {
+          margin-right: 8px;
+          font-size: 20px;
+        }
+
+        &[color="primary"] {
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        &[color="warn"] {
+          box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        &[mat-stroked-button] {
+          border: 2px solid #e9ecef;
+          color: #495057;
+
+          &:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9ff;
+          }
+        }
+      }
+    }
+  }
+
+  // Error State
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+
+    .error-card {
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: none;
+
+      .error-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 40px;
+        text-align: center;
+
+        mat-icon {
+          font-size: 64px;
+          width: 64px;
+          height: 64px;
+          color: #dc3545;
+        }
+
+        h3 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #2c3e50;
+          margin: 0;
+        }
+
+        p {
+          font-size: 1rem;
+          color: #6c757d;
+          margin: 0;
+        }
+
+        button {
+          margin-top: 8px;
+          border-radius: 12px;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .employee-detail-container {
+    padding: 24px;
+
+    .employee-content {
+      .details-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .employee-detail-container {
+    padding: 16px;
+
+    .employee-content {
+      .header-card {
+        .employee-header {
+          flex-direction: column;
+          text-align: center;
+          gap: 20px;
+          padding: 24px;
+
+          .employee-basic-info {
+            h1 {
+              font-size: 2rem;
+            }
+          }
+
+          .employee-actions {
+            button {
+              width: 48px;
+              height: 48px;
+            }
+          }
+        }
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+
+        .info-card {
+          &.schedule-card {
+            .schedule-list {
+              .schedule-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                text-align: center;
+
+                .time-range {
+                  justify-content: center;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .action-buttons {
+        flex-direction: column;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-detail-container {
+    .employee-content {
+      .header-card {
+        .employee-header {
+          .employee-basic-info {
+            h1 {
+              font-size: 1.75rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}

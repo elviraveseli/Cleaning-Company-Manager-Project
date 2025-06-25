@@ -1,0 +1,92 @@
+<!-- Signature Page (Clean Layout) -->
+<div class="signature-layout" *ngIf="isSignaturePage$ | async">
+  <div class="signature-header">
+    <h1>{{ title }}</h1>
+  </div>
+  <div class="signature-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+<!-- Normal Dashboard Layout -->
+<div class="app-shell" *ngIf="(isAuthenticated$ | async) && !(isSignaturePage$ | async)">
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidenav mode="side" opened class="sidenav">
+      <!-- User Profile Section -->
+      <div class="user-profile-section" *ngIf="currentUser$ | async as user">
+        <div class="user-avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+          <div class="user-role">{{ user.role | titlecase }}</div>
+        </div>
+      </div>
+
+      <mat-nav-list>
+        <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+          <mat-icon matListItemIcon>dashboard</mat-icon>
+          <span matListItemTitle>Dashboard</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Human Resources</h3>
+        <a mat-list-item routerLink="/employees" routerLinkActive="active">
+          <mat-icon matListItemIcon>people</mat-icon>
+          <span matListItemTitle>Employees</span>
+        </a>
+        <a mat-list-item routerLink="/employee-contracts" routerLinkActive="active">
+          <mat-icon matListItemIcon>description</mat-icon>
+          <span matListItemTitle>Employee Contracts</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Operations</h3>
+        <a mat-list-item routerLink="/objects" routerLinkActive="active">
+          <mat-icon matListItemIcon>business</mat-icon>
+          <span matListItemTitle>Objects</span>
+        </a>
+        <a mat-list-item routerLink="/customers" routerLinkActive="active">
+          <mat-icon matListItemIcon>people</mat-icon>
+          <span matListItemTitle>Customers</span>
+        </a>
+        <a mat-list-item routerLink="/customer-contracts" routerLinkActive="active">
+          <mat-icon matListItemIcon>assignment</mat-icon>
+          <span matListItemTitle>Customer Contracts</span>
+        </a>
+        <a mat-list-item routerLink="/schedules" routerLinkActive="active">
+          <mat-icon matListItemIcon>schedule</mat-icon>
+          <span matListItemTitle>Schedules</span>
+        </a>
+
+        <mat-divider></mat-divider>
+
+        <h3 matSubheader>Finance</h3>
+        <a mat-list-item routerLink="/invoices" routerLinkActive="active">
+          <mat-icon matListItemIcon>receipt</mat-icon>
+          <span matListItemTitle>Invoices</span>
+        </a>
+
+        <!-- User Menu Items at Bottom -->
+        <mat-divider class="bottom-divider"></mat-divider>
+        
+        <button mat-list-item (click)="logout()" class="logout-button">
+          <mat-icon matListItemIcon>exit_to_app</mat-icon>
+          <span matListItemTitle>Logout</span>
+        </button>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="main-content">
+      <router-outlet></router-outlet>
+      <app-footer></app-footer>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
+
+<!-- Login View (when not authenticated and not on signature page) -->
+<div class="login-view" *ngIf="!(isAuthenticated$ | async) && !(isSignaturePage$ | async)">
+  <router-outlet></router-outlet>
+</div>

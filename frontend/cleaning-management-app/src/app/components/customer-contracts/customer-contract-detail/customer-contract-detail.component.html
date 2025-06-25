@@ -1,0 +1,524 @@
+<div class="contract-detail-container">
+  <!-- Form Header -->
+  <div class="form-header">
+    <h1>{{ contractId === "new" ? "New" : "Edit" }} Contract</h1>
+    <p>
+      {{
+        contractId === "new"
+          ? "Create a new customer contract"
+          : "Update contract information and settings"
+      }}
+    </p>
+  </div>
+
+  <!-- Main Form Content -->
+  <div class="form-content">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Loading contract details...</span>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="error-alert" *ngIf="error">
+      <mat-icon>error</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Contract Content -->
+    <div *ngIf="!loading && (contract || isEditing)">
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Basic Information</h2>
+          <mat-icon>info</mat-icon>
+        </div>
+
+        <!-- View Mode -->
+        <div *ngIf="!isEditing" class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Contract Number</label>
+              <span>{{ contract?.contractNumber }}</span>
+            </div>
+            <div class="info-item">
+              <label>Contract Type</label>
+              <span>{{ contract?.contractType }}</span>
+            </div>
+            <div class="info-item">
+              <label>Start Date</label>
+              <span>{{ formatDate(contract!.startDate) }}</span>
+            </div>
+            <div class="info-item" *ngIf="contract?.endDate">
+              <label>End Date</label>
+              <span>{{ formatDate(contract?.endDate) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Billing Frequency</label>
+              <span>{{ contract?.billingFrequency }}</span>
+            </div>
+            <div class="info-item">
+              <label>Payment Terms</label>
+              <span>{{ contract?.paymentTerms }}</span>
+            </div>
+            <div class="info-item">
+              <label>Status</label>
+              <mat-chip
+                [ngClass]="'status-' + contract?.status?.toLowerCase()"
+                selected
+              >
+                <mat-icon>{{
+                  contract?.status === "Active"
+                    ? "check_circle"
+                    : contract?.status === "Terminated"
+                    ? "cancel"
+                    : "schedule"
+                }}</mat-icon>
+                {{ contract?.status }}
+              </mat-chip>
+            </div>
+            <div class="info-item">
+              <label>Total Amount</label>
+              <span class="amount">{{
+                formatCurrency(contract!.totalAmount)
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div *ngIf="isEditing" class="section-content">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Contract Type</mat-label>
+              <mat-select [(ngModel)]="editingContract!.contractType" required>
+                <mat-option *ngFor="let type of contractTypes" [value]="type">
+                  {{ type }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input
+                matInput
+                type="date"
+                [value]="getStartDateValue()"
+                (change)="onStartDateChange($event)"
+                required
+              />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input
+                matInput
+                type="date"
+                [value]="getEndDateValue()"
+                (change)="onEndDateChange($event)"
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Billing Frequency</mat-label>
+              <mat-select
+                [(ngModel)]="editingContract!.billingFrequency"
+                required
+              >
+                <mat-option
+                  *ngFor="let freq of billingFrequencies"
+                  [value]="freq"
+                >
+                  {{ freq }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Payment Terms</mat-label>
+              <mat-select [(ngModel)]="editingContract!.paymentTerms" required>
+                <mat-option *ngFor="let term of paymentTerms" [value]="term">
+                  {{ term }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Status</mat-label>
+              <mat-select [(ngModel)]="editingContract!.status" required>
+                <mat-option *ngFor="let status of statusTypes" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Customer Information</h2>
+          <mat-icon>person</mat-icon>
+        </div>
+
+        <!-- View Mode -->
+        <div *ngIf="!isEditing" class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Name</label>
+              <span>{{ contract?.customer?.name }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email</label>
+              <span>{{ contract?.customer?.email }}</span>
+            </div>
+            <div class="info-item">
+              <label>Phone</label>
+              <span>{{ contract?.customer?.phone }}</span>
+            </div>
+            <div
+              class="info-item full-width"
+              *ngIf="contract?.customer?.address"
+            >
+              <label>Address</label>
+              <span>
+                {{ contract?.customer?.address?.street }}<br />
+                {{ contract?.customer?.address?.city }},
+                {{ contract?.customer?.address?.municipality }}<br />
+                {{ contract?.customer?.address?.country }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div *ngIf="isEditing" class="section-content">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Customer</mat-label>
+              <mat-select [(ngModel)]="editingContract!.customer" required (selectionChange)="onCustomerSelect($event)">
+                <mat-option *ngFor="let customer of customerOptions" [value]="customer">
+                  {{ customer.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Customer Objects Dropdown -->
+          <div class="form-row" *ngIf="selectedCustomerObjects.length > 0">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Customer Object</mat-label>
+              <mat-select [(ngModel)]="editingContract!.selectedObject">
+                <mat-option *ngFor="let object of selectedCustomerObjects" [value]="object">
+                  <div class="object-option">
+                    <mat-icon>{{ getObjectIcon(object.type) }}</mat-icon>
+                    <span class="object-details">
+                      <span class="object-name">{{ object.name }}</span>
+                      <span class="object-address" *ngIf="object.address">{{ object.address.street }}, {{ object.address.city }}</span>
+                    </span>
+          </div>
+                </mat-option>
+              </mat-select>
+              <mat-hint>Select the property or location for this contract</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Services</h2>
+          <mat-icon>cleaning_services</mat-icon>
+        </div>
+        <div class="section-content">
+          <!-- Services List -->
+          <div
+            *ngIf="contract?.services && (contract?.services?.length || 0) > 0"
+            class="services-list"
+          >
+            <div
+              *ngFor="let service of contract?.services || []; let i = index"
+              class="service-item"
+            >
+              <div class="service-info">
+                <h4>{{ service.name }}</h4>
+                <p *ngIf="service.description">{{ service.description }}</p>
+                <div class="service-details">
+                  <span class="frequency">{{ service.frequency }}</span>
+                  <span class="price">{{ formatCurrency(service.price) }}</span>
+                </div>
+              </div>
+              <div *ngIf="isEditing" class="service-actions">
+                <button mat-icon-button color="warn" (click)="removeService(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Services Message -->
+          <div
+            *ngIf="
+              !contract?.services || (contract?.services?.length || 0) === 0
+            "
+            class="no-data"
+          >
+            <mat-icon>cleaning_services</mat-icon>
+            <p>No services added yet</p>
+          </div>
+
+          <!-- Add Service Button -->
+          <div *ngIf="isEditing" class="add-button-container">
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="showAddService = !showAddService"
+            >
+              <mat-icon>add</mat-icon>
+              Add Service
+            </button>
+          </div>
+
+          <!-- Add Service Form -->
+          <div *ngIf="isEditing && showAddService" class="add-form">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Service Name</mat-label>
+                <input matInput [(ngModel)]="newService.name" required />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Frequency</mat-label>
+                <mat-select [(ngModel)]="newService.frequency" required>
+                  <mat-option
+                    *ngFor="let freq of serviceFrequencies"
+                    [value]="freq"
+                  >
+                    {{ freq }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Price</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [(ngModel)]="newService.price"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+                <span matPrefix>€</span>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea
+                  matInput
+                  [(ngModel)]="newService.description"
+                  rows="2"
+                ></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="form-actions">
+              <button mat-stroked-button (click)="showAddService = false">
+                <mat-icon>cancel</mat-icon>
+                Cancel
+              </button>
+              <button mat-raised-button color="primary" (click)="addService()">
+                <mat-icon>add</mat-icon>
+                Add Service
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Objects Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Objects</h2>
+          <mat-icon>location_on</mat-icon>
+        </div>
+        <div class="section-content">
+          <!-- Objects List -->
+          <div
+            *ngIf="contract?.objects && (contract?.objects?.length || 0) > 0"
+            class="chips-container"
+          >
+            <mat-chip-listbox>
+              <mat-chip-option
+                *ngFor="let objectId of contract?.objects || []"
+                selected
+              >
+                <mat-icon matChipAvatar>location_on</mat-icon>
+                Object {{ objectId }}
+              </mat-chip-option>
+            </mat-chip-listbox>
+          </div>
+
+          <!-- No Objects Message -->
+          <div
+            *ngIf="!contract?.objects || (contract?.objects?.length || 0) === 0"
+            class="no-data"
+          >
+            <mat-icon>location_off</mat-icon>
+            <p>No objects assigned yet</p>
+          </div>
+
+          <!-- Edit Mode Object Selection -->
+          <div *ngIf="isEditing" class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Objects</mat-label>
+              <mat-select [(ngModel)]="editingContract!.objects" multiple>
+                <mat-option
+                  *ngFor="let object of objectOptions"
+                  [value]="object._id"
+                >
+                  {{ object.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assigned Employees Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Assigned Employees</h2>
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="section-content">
+          <!-- Employees List -->
+          <div
+            *ngIf="
+              contract?.assignedEmployees &&
+              (contract?.assignedEmployees?.length || 0) > 0
+            "
+            class="chips-container"
+          >
+            <mat-chip-listbox>
+              <mat-chip-option
+                *ngFor="let employeeId of contract?.assignedEmployees || []"
+                selected
+              >
+                <mat-icon matChipAvatar>person</mat-icon>
+                Employee {{ employeeId }}
+              </mat-chip-option>
+            </mat-chip-listbox>
+          </div>
+
+          <!-- No Employees Message -->
+          <div
+            *ngIf="
+              !contract?.assignedEmployees ||
+              (contract?.assignedEmployees?.length || 0) === 0
+            "
+            class="no-data"
+          >
+            <mat-icon>person_off</mat-icon>
+            <p>No employees assigned yet</p>
+          </div>
+
+          <!-- Edit Mode Employee Selection -->
+          <div *ngIf="isEditing" class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Employees</mat-label>
+              <mat-select
+                [(ngModel)]="editingContract!.assignedEmployees"
+                multiple
+              >
+                <mat-option
+                  *ngFor="let employee of employeeOptions"
+                  [value]="employee._id"
+                >
+                  {{ employee.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Additional Details</h2>
+          <mat-icon>notes</mat-icon>
+        </div>
+        <div class="section-content">
+          <!-- View Mode -->
+          <div *ngIf="!isEditing" class="info-grid">
+            <div class="info-item full-width" *ngIf="contract?.terms">
+              <label>Terms & Conditions</label>
+              <p>{{ contract?.terms }}</p>
+            </div>
+            <div class="info-item full-width" *ngIf="contract?.notes">
+              <label>Notes</label>
+              <p>{{ contract?.notes }}</p>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <div *ngIf="isEditing" class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Terms & Conditions</mat-label>
+              <textarea
+                matInput
+                [(ngModel)]="editingContract!.terms"
+                rows="4"
+              ></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notes</mat-label>
+              <textarea
+                matInput
+                [(ngModel)]="editingContract!.notes"
+                rows="3"
+              ></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions" *ngIf="!isEditing">
+        <button mat-stroked-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to List
+        </button>
+        <button mat-raised-button color="primary" (click)="editContract()">
+          <mat-icon>edit</mat-icon>
+          Edit Contract
+        </button>
+      </div>
+
+      <div class="form-actions" *ngIf="isEditing">
+        <button mat-stroked-button (click)="cancelEdit()" [disabled]="loading">
+          <mat-icon>cancel</mat-icon>
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onFormSubmit()"
+          [disabled]="loading"
+        >
+          <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!loading">save</mat-icon>
+          {{ contractId === "new" ? "Create Contract" : "Save Changes" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
