@@ -3,6 +3,7 @@ services:
   - type: web
     name: cleaning-manager-api
     runtime: node
+    rootDir: .
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
     envVars:
@@ -46,6 +47,7 @@ services:
   - type: web
     name: cleaning-manager-frontend
     runtime: static
+    rootDir: .
     buildCommand: cd frontend/cleaning-management-app && npm install && npm run build
     staticPublishPath: ./frontend/cleaning-management-app/dist/cleaning-management-app
     envVars:
