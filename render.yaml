@@ -1,0 +1,53 @@
+services:
+  # Backend API service
+  - type: web
+    name: cleaning-manager-api
+    runtime: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb://localhost:27017/cleaning-management
+        sync: false
+      - key: PORT
+        value: 3000
+        sync: false
+      - key: JWT_SECRET
+        value: your-super-secret-jwt-key-change-this-in-production-2024
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        value: your-super-secret-refresh-jwt-key-change-this-in-production-2024
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: gmail
+        sync: false
+      - key: EMAIL_USER
+        value: brahafiona4@gmail.com
+        sync: false
+      - key: EMAIL_APP_PASSWORD
+        value: aust hema avua cvzt
+        sync: false
+      - key: COMPANY_EMAIL
+        value: brahafiona4@gmail.com
+        sync: false
+      - key: COMPANY_PHONE
+        value: +355 (68) 123-4567
+        sync: false
+      - key: COMPANY_ADDRESS
+        value: Pristina, Kosovo
+        sync: false
+      - key: FRONTEND_URI
+        value: https://cleaning-manager-frontend.onrender.com
+        sync: false
+
+  # Frontend service
+  - type: web
+    name: cleaning-manager-frontend
+    runtime: static
+    buildCommand: cd frontend/cleaning-management-app && npm install && npm run build
+    staticPublishPath: ./frontend/cleaning-management-app/dist/cleaning-management-app
+    envVars:
+      - key: NODE_ENV
+        value: production
