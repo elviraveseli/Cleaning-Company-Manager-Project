@@ -1,2 +1,2 @@
-/api/*  https://cleaning-management-backend.onrender.com/api/:splat  200
+/api/*  https://cleaning-manager-api.onrender.com/api/:splat  200
 /*       /index.html   200
