@@ -6,7 +6,6 @@ services:
     rootDir: .
     buildCommand: mkdir -p server && cp -r backend/* server/ && cd backend && npm install
     startCommand: cd backend && npm start
-
     envVars:
       - key: NODE_ENV
         value: production

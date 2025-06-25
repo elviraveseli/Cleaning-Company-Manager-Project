@@ -3,39 +3,37 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError, map, finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { 
-  User, 
-  LoginRequest, 
-  RegisterRequest, 
-  AuthResponse, 
-  RefreshTokenRequest, 
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  RefreshTokenRequest,
   RefreshTokenResponse,
   ChangePasswordRequest,
-  UpdateProfileRequest 
+  UpdateProfileRequest,
 } from '../models/auth.model';
+import { environment } from 'src/environments/environment.prod';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
+  constructor(private http: HttpClient, private router: Router) {
     this.initializeAuth();
   }
 
   private initializeAuth(): void {
     const token = this.getAccessToken();
     const user = this.getStoredUser();
-    
+
     if (token && user) {
       this.currentUserSubject.next(user);
       this.isAuthenticatedSubject.next(true);
@@ -43,9 +41,10 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials)
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/login`, credentials)
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success) {
             this.setAuthData(response.data);
           }
@@ -55,9 +54,10 @@ export class AuthService {
   }
 
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, userData)
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/register`, userData)
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success) {
             this.setAuthData(response.data);
           }
@@ -72,18 +72,18 @@ export class AuthService {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('currentUser');
-      
+
       // Update subjects
       this.currentUserSubject.next(null);
       this.isAuthenticatedSubject.next(false);
-      
+
       // Navigate to login page
       this.router.navigate(['/login']).then(() => {
         // After navigation, try to notify the server
         this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
           error: (error) => {
             console.error('Error during server logout:', error);
-          }
+          },
         });
       });
     } catch (error) {
@@ -95,21 +95,25 @@ export class AuthService {
 
   refreshToken(): Observable<RefreshTokenResponse> {
     const refreshToken = this.getRefreshToken();
-    
+
     if (!refreshToken) {
       return throwError('No refresh token available');
     }
 
     const request: RefreshTokenRequest = { refreshToken };
-    
-    return this.http.post<RefreshTokenResponse>(`${this.apiUrl}/refresh-token`, request)
+
+    return this.http
+      .post<RefreshTokenResponse>(`${this.apiUrl}/refresh-token`, request)
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success) {
-            this.setTokens(response.data.accessToken, response.data.refreshToken);
+            this.setTokens(
+              response.data.accessToken,
+              response.data.refreshToken
+            );
           }
         }),
-        catchError(error => {
+        catchError((error) => {
           this.clearAuthData();
           return throwError(error);
         })
@@ -117,9 +121,10 @@ export class AuthService {
   }
 
   getProfile(): Observable<{ success: boolean; data: { user: User } }> {
-    return this.http.get<{ success: boolean; data: { user: User } }>(`${this.apiUrl}/profile`)
+    return this.http
+      .get<{ success: boolean; data: { user: User } }>(`${this.apiUrl}/profile`)
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success) {
             this.currentUserSubject.next(response.data.user);
             this.storeUser(response.data.user);
@@ -129,10 +134,16 @@ export class AuthService {
       );
   }
 
-  updateProfile(profileData: UpdateProfileRequest): Observable<{ success: boolean; data: { user: User } }> {
-    return this.http.put<{ success: boolean; data: { user: User } }>(`${this.apiUrl}/profile`, profileData)
+  updateProfile(
+    profileData: UpdateProfileRequest
+  ): Observable<{ success: boolean; data: { user: User } }> {
+    return this.http
+      .put<{ success: boolean; data: { user: User } }>(
+        `${this.apiUrl}/profile`,
+        profileData
+      )
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success) {
             this.currentUserSubject.next(response.data.user);
             this.storeUser(response.data.user);
@@ -142,12 +153,22 @@ export class AuthService {
       );
   }
 
-  changePassword(passwordData: ChangePasswordRequest): Observable<{ success: boolean; message: string }> {
-    return this.http.put<{ success: boolean; message: string }>(`${this.apiUrl}/change-password`, passwordData)
+  changePassword(
+    passwordData: ChangePasswordRequest
+  ): Observable<{ success: boolean; message: string }> {
+    return this.http
+      .put<{ success: boolean; message: string }>(
+        `${this.apiUrl}/change-password`,
+        passwordData
+      )
       .pipe(catchError(this.handleError));
   }
 
-  private setAuthData(authData: { user: User; accessToken: string; refreshToken: string }): void {
+  private setAuthData(authData: {
+    user: User;
+    accessToken: string;
+    refreshToken: string;
+  }): void {
     this.setTokens(authData.accessToken, authData.refreshToken);
     this.storeUser(authData.user);
     this.currentUserSubject.next(authData.user);
@@ -205,7 +226,7 @@ export class AuthService {
 
   private handleError = (error: HttpErrorResponse) => {
     let errorMessage = 'An unknown error occurred';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = error.error.message;
@@ -217,7 +238,7 @@ export class AuthService {
         errorMessage = error.message;
       }
     }
-    
+
     return throwError(errorMessage);
   };
-} 
+}
