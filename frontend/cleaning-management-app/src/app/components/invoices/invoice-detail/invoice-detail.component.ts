@@ -1051,24 +1051,32 @@ export class InvoiceDetailComponent implements OnInit, OnDestroy {
 
     operation.pipe(takeUntil(this.destroy$)).subscribe({
       next: (result) => {
-        this.loading = false;
-        this.snackBar.open(
-          `Invoice ${this.isEdit ? 'updated' : 'created'} successfully`,
-          'Close',
-          { duration: 3000 }
-        );
-        this.router.navigate(['/invoices']);
+        // Check if component is still mounted before updating state
+        if (!this.destroy$.closed) {
+          this.loading = false;
+          // Use afterDismissed to navigate only after the snackBar is dismissed or times out
+          this.snackBar.open(
+            `Invoice ${this.isEdit ? 'updated' : 'created'} successfully`,
+            'Close',
+            { duration: 3000 }
+          ).afterDismissed().subscribe(() => {
+            this.router.navigate(['/invoices']);
+          });
+        }
       },
       error: (error) => {
-        this.loading = false;
-        console.error('Error saving invoice:', error);
-        this.snackBar.open(
-          `Error ${this.isEdit ? 'updating' : 'creating'} invoice: ${
-            error.error?.message || error.message || 'Unknown error'
-          }`,
-          'Close',
-          { duration: 5000 }
-        );
+        // Check if component is still mounted before updating state
+        if (!this.destroy$.closed) {
+          this.loading = false;
+          console.error('Error saving invoice:', error);
+          this.snackBar.open(
+            `Error ${this.isEdit ? 'updating' : 'creating'} invoice: ${
+              error.error?.message || error.message || 'Unknown error'
+            }`,
+            'Close',
+            { duration: 5000 }
+          );
+        }
       },
     });
   }
