@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { environment } from 'src/environments/environment.prod';
 
 export interface DashboardStats {
   totalEmployees: number;
@@ -44,7 +44,7 @@ export class DashboardService {
     const params = new HttpParams().set('timeFilter', timeFilter);
     
     // Use the optimized dashboard endpoint with time filter
-    return this.http.get<any>('/api/dashboard/stats', { params }).pipe(
+    return this.http.get<any>(`${environment.apiUrl}/dashboard/stats`, { params }).pipe(
       map((data) => {
         return {
           totalEmployees: data.totalEmployees,
