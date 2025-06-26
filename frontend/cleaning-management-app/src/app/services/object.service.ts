@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment.prod';
 import {
   ObjectLocation,
   ObjectStats,
@@ -12,7 +13,8 @@ import {
   providedIn: 'root',
 })
 export class ObjectService {
-  private apiUrl = '/api/objects';
+
+  private apiUrl = `${environment.apiUrl}/objects`;
   private objectsSubject = new BehaviorSubject<ObjectLocation[]>([]);
   objects$ = this.objectsSubject.asObservable();
 
