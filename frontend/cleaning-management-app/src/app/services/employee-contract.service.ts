@@ -8,7 +8,7 @@ import { environment } from 'src/environments/environment.prod';
   providedIn: 'root'
 })
 export class EmployeeContractService {
-  private apiUrl = '${environment.apiUrl}/employee-contracts';
+private apiUrl = `${environment.apiUrl}/employee-contracts`;
   private contractsSubject = new BehaviorSubject<EmployeeContract[]>([]);
   contracts$ = this.contractsSubject.asObservable();
 
