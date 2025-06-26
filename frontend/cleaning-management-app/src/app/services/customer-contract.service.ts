@@ -10,12 +10,13 @@ import {
   ObjectOption,
   EmployeeOption,
 } from '../models/customer-contract.model';
+import { environment } from 'src/environments/environment.prod';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CustomerContractService {
-  private apiUrl = '/api/customer-contracts';
+  private apiUrl = `${environment.apiUrl}/customer-contracts`;
   private contractsSubject = new BehaviorSubject<CustomerContract[]>([]);
   contracts$ = this.contractsSubject.asObservable();
 
@@ -182,7 +183,7 @@ export class CustomerContractService {
 
   // Get options for dropdowns
   getCustomerOptions(): Observable<CustomerOption[]> {
-    return this.http.get<any[]>('/api/customers').pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/customers`).pipe(
       map((customers) =>
         customers.map((customer) => ({
           _id: customer._id,
@@ -199,7 +200,7 @@ export class CustomerContractService {
   }
 
   getCustomerObjects(customerId: string): Observable<ObjectOption[]> {
-    return this.http.get<any[]>(`/api/objects?customerId=${customerId}`).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/objects?customerId=${customerId}`).pipe(
       map((objects) =>
         objects.map((obj) => ({
           _id: obj._id,
@@ -216,7 +217,7 @@ export class CustomerContractService {
   }
 
   getObjectOptions(): Observable<ObjectOption[]> {
-    return this.http.get<any[]>('/api/objects').pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/objects`).pipe(
       map((objects) =>
         objects.map((obj) => ({
           _id: obj._id,
@@ -233,7 +234,7 @@ export class CustomerContractService {
   }
 
   getEmployeeOptions(): Observable<EmployeeOption[]> {
-    return this.http.get<any[]>('/api/employees').pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/employees`).pipe(
       map((employees) =>
         employees.map((emp) => ({
           _id: emp._id,
