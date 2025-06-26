@@ -1,171 +1,341 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { Customer } from '../models/customer.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
+import {
+  CustomerContract,
+  CustomerContractStats,
+  CustomerContractFilters,
+  CustomerOption,
+  ObjectOption,
+  EmployeeOption,
+} from '../models/customer-contract.model';
 import { environment } from 'src/environments/environment.prod';
+
 @Injectable({
   providedIn: 'root',
 })
-export class CustomerService {
-  private apiUrl = `${environment.apiUrl}/customers`;
-  private customersSubject = new BehaviorSubject<Customer[]>([]);
-  customers$ = this.customersSubject.asObservable();
+export class CustomerContractService {
+  private apiUrl = `${environment.apiUrl}/customer-contracts`;
+  private contractsSubject = new BehaviorSubject<CustomerContract[]>([]);
+  contracts$ = this.contractsSubject.asObservable();
 
-  // Predefined options for dropdowns
-  readonly customerTypes = ['Residential', 'Commercial'];
-  readonly statusTypes = ['Active', 'Inactive', 'Pending'];
-  readonly contactMethods = ['Email', 'Phone', 'Text'];
-  readonly paymentMethods = ['Credit Card', 'Bank Transfer', 'Check', 'Cash'];
-  readonly billingCycles = ['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'];
-  readonly timePreferences = ['Morning', 'Afternoon', 'Evening', 'Flexible'];
-  readonly dayOptions = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
+  // Form options
+  readonly contractTypes = ['One-time', 'Recurring', 'Long-term', 'Emergency'];
+  readonly billingFrequencies = [
+    'Weekly',
+    'Bi-weekly',
+    'Monthly',
+    'Quarterly',
+    'Annually',
+    'Due on Receipt',
   ];
-  readonly referralSources = [
-    'Google Search',
-    'Social Media',
-    'Referral from Friend',
-    'Flyers/Advertisements',
-    'Website',
-    'Yellow Pages',
-    'Other',
+  readonly paymentTerms = [
+    'Within 10 days',
+    'Within 20 days',
+    'Within 30 days',
+    'Within 45 days',
+    'Immediate Payment',
+    'In advance',
   ];
-  readonly availableTags = [
-    'VIP Customer',
-    'High Value',
-    'Frequent Service',
-    'Special Requirements',
-    'Pet Owner',
-    'Key Access',
-    'Elderly Client',
-    'New Customer',
-    'Seasonal Service',
-    'Corporate Account',
+  readonly statusTypes = [
+    'Active',
+    'Expired',
+    'Terminated',
+    'Suspended',
+    'Pending',
+  ];
+  readonly serviceFrequencies = [
+    'Daily',
+    'Weekly',
+    'Bi-weekly',
+    'Monthly',
+    'As Needed',
   ];
 
   constructor(private http: HttpClient) {
-    // Load customers from API on service initialization
-    this.loadCustomers();
+    this.loadContracts();
   }
 
-  private loadCustomers(): void {
-    this.getCustomers().subscribe();
+  private loadContracts(): void {
+    this.getContracts().subscribe({
+      next: (contracts) => this.contractsSubject.next(contracts),
+      error: (error) => {
+        console.error('Error loading contracts:', error);
+        this.contractsSubject.next([]);
+      },
+    });
   }
 
-  getCustomers(): Observable<Customer[]> {
-    console.log('📡 Fetching customers from API:', this.apiUrl);
+  getContracts(
+    filters?: CustomerContractFilters
+  ): Observable<CustomerContract[]> {
+    let params = new HttpParams();
 
-    return this.http
-      .get<Customer[] | { customers: Customer[]; total: number }>(
-        `${this.apiUrl}`
-      )
-      .pipe(
-        map((response) => {
-          // Handle both direct array and paginated responses
-          if (Array.isArray(response)) {
-            return response;
-          } else if (response && (response as any).customers) {
-            return (response as any).customers;
-          } else {
-            return [];
-          }
-        }),
-        tap((customers) => {
-          console.log('✅ Customers loaded from API:', customers.length);
-          this.customersSubject.next(customers);
-        })
-      );
-  }
+    if (filters) {
+      if (filters.search) params = params.set('search', filters.search);
+      if (filters.status) params = params.set('status', filters.status);
+      if (filters.contractType)
+        params = params.set('contractType', filters.contractType);
+    }
 
-  getCustomer(id: string): Observable<Customer> {
-    console.log('📡 Fetching customer from API:', id);
-    return this.http.get<Customer>(`${this.apiUrl}/${id}`).pipe(
-      tap((customer) => {
-        console.log(
-          '✅ Customer loaded from API:',
-          customer.firstName,
-          customer.lastName
-        );
+    // Add populate parameter to ensure objects are included
+    params = params.set('populate', 'objects');
+
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map((response) => {
+        // Handle both paginated and non-paginated responses
+        let contracts = [];
+        if (response.contracts) {
+          contracts = response.contracts;
+        } else if (Array.isArray(response)) {
+          contracts = response;
+        }
+        console.log('Loaded contracts with objects:', contracts);
+        return contracts;
+      }),
+      tap((contracts) => this.contractsSubject.next(contracts)),
+      catchError((error) => {
+        console.error('Error fetching contracts:', error);
+        return throwError(() => error);
       })
     );
   }
 
-  createCustomer(customerData: Omit<Customer, '_id'>): Observable<Customer> {
-    console.log('📡 Creating customer via API:', customerData);
-    return this.http.post<Customer>(this.apiUrl, customerData).pipe(
-      tap((newCustomer) => {
-        console.log('✅ Customer created via API:', newCustomer._id);
-        // Refresh the customers list
-        this.loadCustomers();
+  getContract(id: string): Observable<CustomerContract> {
+    return this.http.get<CustomerContract>(`${this.apiUrl}/${id}`).pipe(
+      catchError((error) => {
+        console.error('Error fetching contract:', error);
+        return throwError(() => error);
       })
     );
   }
 
-  updateCustomer(
+  createContract(
+    contractData: Omit<CustomerContract, '_id' | 'createdAt' | 'updatedAt'>
+  ): Observable<CustomerContract> {
+    // Generate contract number if not provided
+    if (!contractData.contractNumber) {
+      contractData.contractNumber = this.generateContractNumber();
+    }
+
+    return this.http.post<CustomerContract>(this.apiUrl, contractData).pipe(
+      tap(() => this.loadContracts()), // Refresh the contracts list
+      catchError((error) => {
+        console.error('Error creating contract:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  updateContract(
     id: string,
-    customerData: Partial<Customer>
-  ): Observable<Customer> {
-    console.log('📡 Updating customer via API:', id, customerData);
-    return this.http.put<Customer>(`${this.apiUrl}/${id}`, customerData).pipe(
-      tap((updatedCustomer) => {
-        console.log('✅ Customer updated via API:', updatedCustomer._id);
-        // Refresh the customers list
-        this.loadCustomers();
-      })
-    );
-  }
-
-  deleteCustomer(id: string): Observable<void> {
-    console.log('📡 Deleting customer via API:', id);
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(() => {
-        console.log('✅ Customer deleted via API:', id);
-        // Refresh the customers list
-        this.loadCustomers();
-      })
-    );
-  }
-
-  searchCustomers(query: string): Observable<Customer[]> {
-    console.log('📡 Searching customers via API:', query);
+    contractData: Partial<CustomerContract>
+  ): Observable<CustomerContract> {
     return this.http
-      .get<Customer[]>(`${this.apiUrl}?search=${encodeURIComponent(query)}`)
+      .put<CustomerContract>(`${this.apiUrl}/${id}`, contractData)
       .pipe(
-        tap((customers) => {
-          console.log('✅ Customer search results from API:', customers.length);
+        tap(() => this.loadContracts()), // Refresh the contracts list
+        catchError((error) => {
+          console.error('Error updating contract:', error);
+          return throwError(() => error);
         })
       );
   }
 
-  getCustomersByType(type: string): Observable<Customer[]> {
-    console.log('📡 Fetching customers by type from API:', type);
-    return this.http.get<Customer[]>(`${this.apiUrl}/type/${type}`).pipe(
-      tap((customers) => {
-        console.log('✅ Customers by type loaded from API:', customers.length);
+  deleteContract(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => this.loadContracts()), // Refresh the contracts list
+      catchError((error) => {
+        console.error('Error deleting contract:', error);
+        return throwError(() => error);
       })
     );
   }
 
-  getCustomersByStatus(status: string): Observable<Customer[]> {
-    console.log('📡 Fetching customers by status from API:', status);
-    return this.http.get<Customer[]>(`${this.apiUrl}/status/${status}`).pipe(
-      tap((customers) => {
-        console.log(
-          '✅ Customers by status loaded from API:',
-          customers.length
-        );
+  getContractStats(): Observable<CustomerContractStats> {
+    return this.getContracts().pipe(
+      map((contracts) => {
+        const stats: CustomerContractStats = {
+          total: contracts.length,
+          active: contracts.filter((c) => c.status === 'Active').length,
+          pending: contracts.filter((c) => c.status === 'Pending').length,
+          expired: contracts.filter((c) => c.status === 'Expired').length,
+          terminated: contracts.filter((c) => c.status === 'Terminated').length,
+          suspended: contracts.filter((c) => c.status === 'Suspended').length,
+          totalRevenue: contracts.reduce(
+            (sum, c) => sum + (c.totalAmount || 0),
+            0
+          ),
+          averageContractValue: 0,
+        };
+
+        stats.averageContractValue =
+          stats.total > 0 ? stats.totalRevenue / stats.total : 0;
+        return stats;
+      }),
+      catchError((error) => {
+        console.error('Error calculating stats:', error);
+        return throwError(() => error);
       })
     );
   }
 
-  exportCustomers(): Observable<Customer[]> {
-    return this.getCustomers();
+  // Get options for dropdowns
+  getCustomerOptions(): Observable<CustomerOption[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/customers`).pipe(
+      map((customers) =>
+        customers.map((customer) => ({
+          _id: customer._id,
+          name:
+            customer.fullName || `${customer.firstName} ${customer.lastName}`,
+          email: customer.email,
+        }))
+      ),
+      catchError((error) => {
+        console.error('Error fetching customer options:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getCustomerObjects(customerId: string): Observable<ObjectOption[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/objects?customerId=${customerId}`).pipe(
+      map((objects) =>
+        objects.map((obj) => ({
+          _id: obj._id,
+          name: obj.name,
+          address: obj.address,
+          type: obj.type || 'Unknown',
+        }))
+      ),
+      catchError((error) => {
+        console.error('Error fetching customer objects:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getObjectOptions(): Observable<ObjectOption[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/objects`).pipe(
+      map((objects) =>
+        objects.map((obj) => ({
+          _id: obj._id,
+          name: obj.name,
+          address: obj.address,
+          type: obj.type || 'Unknown',
+        }))
+      ),
+      catchError((error) => {
+        console.error('Error fetching object options:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getEmployeeOptions(): Observable<EmployeeOption[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/employees`).pipe(
+      map((employees) =>
+        employees.map((emp) => ({
+          _id: emp._id,
+          name: `${emp.firstName} ${emp.lastName}`,
+          position: emp.position,
+          specialties: emp.specialties || [],
+        }))
+      ),
+      catchError((error) => {
+        console.error('Error fetching employee options:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Email functionality
+  sendContractEmail(contractId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${contractId}/send-email`, {}).pipe(
+      catchError((error) => {
+        console.error('Error sending contract email:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  testEmailConfig(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/test/email-config`).pipe(
+      catchError((error) => {
+        console.error('Error testing email config:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Export functionality
+  exportToCSV(): Observable<string> {
+    return this.getContracts().pipe(
+      map((contracts) => {
+        const headers = [
+          'Contract Number',
+          'Customer Name',
+          'Customer Email',
+          'Contract Type',
+          'Status',
+          'Start Date',
+          'End Date',
+          'Total Amount',
+          'Billing Frequency',
+        ];
+
+        const rows = contracts.map((contract) => [
+          contract.contractNumber || '',
+          contract.customer?.name || '',
+          contract.customer?.email || '',
+          contract.contractType || '',
+          contract.status || '',
+          contract.startDate
+            ? new Date(contract.startDate).toLocaleDateString()
+            : '',
+          contract.endDate
+            ? new Date(contract.endDate).toLocaleDateString()
+            : '',
+          contract.totalAmount?.toString() || '0',
+          contract.billingFrequency || '',
+        ]);
+
+        return [headers, ...rows]
+          .map((row) => row.map((field) => `"${field}"`).join(','))
+          .join('\n');
+      }),
+      catchError((error) => {
+        console.error('Error exporting to CSV:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  private generateContractNumber(): string {
+    const year = new Date().getFullYear();
+    const timestamp = Date.now().toString().slice(-6);
+    return `CC-${year}-${timestamp}`;
+  }
+
+  // Legacy methods for backward compatibility
+  getCustomerContracts(): Observable<any[]> {
+    return this.getContracts();
+  }
+
+  getCustomerContract(id: string): Observable<any> {
+    return this.getContract(id);
+  }
+
+  createCustomerContract(contract: any): Observable<any> {
+    return this.createContract(contract);
+  }
+
+  updateCustomerContract(id: string, contract: any): Observable<any> {
+    return this.updateContract(id, contract);
+  }
+
+  deleteCustomerContract(id: string): Observable<any> {
+    return this.deleteContract(id);
   }
 }
