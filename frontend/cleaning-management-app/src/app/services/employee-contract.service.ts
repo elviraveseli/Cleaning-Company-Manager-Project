@@ -4,11 +4,12 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EmployeeContract } from '../models/employee-contract.model';
 import { environment } from 'src/environments/environment.prod';
+
 @Injectable({
   providedIn: 'root'
 })
 export class EmployeeContractService {
-private apiUrl = `${environment.apiUrl}/employee-contracts`;
+  private apiUrl = `${environment.apiUrl}/employee-contracts`;
   private contractsSubject = new BehaviorSubject<EmployeeContract[]>([]);
   contracts$ = this.contractsSubject.asObservable();
 
