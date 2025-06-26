@@ -43,7 +43,9 @@ export class EmailService {
     // This ensures links in emails always point to the deployed application
     const baseUrl = 'https://cleaning-company-manager-project-2.onrender.com'; // Frontend Render URL
     
-    const signatureUrl = data.signatureUrl || `${baseUrl}/contracts/${contract._id}/sign`;
+    // Use hash-based routing to ensure the URL works in production
+    // This prevents 404 errors when directly accessing the URL
+    const signatureUrl = data.signatureUrl || `${baseUrl}/#/contracts/${contract._id}/sign`;
 
     const subject = `Contract Signature Required - ${contract.contractNumber}`;
 
