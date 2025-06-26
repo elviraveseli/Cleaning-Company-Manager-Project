@@ -39,11 +39,9 @@ export class EmailService {
   generateContractSignatureEmail(data: ContractEmailData): EmailTemplate {
     const { contract } = data;
     
-    // Use environment-based URL for contract signing
-    // This ensures it works both in development and production (Render)
-    let baseUrl = environment.production 
-      ? 'https://cleaning-company-manager-frontend.onrender.com' // Frontend Render URL
-      : window.location.origin;
+    // Always use the production URL for contract signing
+    // This ensures links in emails always point to the deployed application
+    const baseUrl = 'https://cleaning-company-manager-project-2.onrender.com'; // Frontend Render URL
     
     const signatureUrl = data.signatureUrl || `${baseUrl}/contracts/${contract._id}/sign`;
 
@@ -158,7 +156,10 @@ export class EmailService {
     return this.http
       .post<any>(
         `${environment.apiUrl}/customer-contracts/${contract._id}/send-email`,
-        {}
+        {
+          // Pass the frontend URL to the backend so it can generate correct signature links
+          frontendUrl: 'https://cleaning-company-manager-project-2.onrender.com'
+        }
       )
       .pipe(
         map((response: any) => {
