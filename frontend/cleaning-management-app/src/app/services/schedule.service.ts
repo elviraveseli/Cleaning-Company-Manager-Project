@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from 'src/environments/environment.prod';
 import { Schedule, ScheduleFormData } from '../models/schedule.model';
 
 export interface ScheduleResponse {
@@ -15,7 +15,7 @@ export interface ScheduleResponse {
   providedIn: 'root'
 })
 export class ScheduleService {
-  private apiUrl = '/api/schedules'; // Use relative URL for proxy
+  private apiUrl = `${environment.apiUrl}/schedules`; // Updated to use environment variable
 
   constructor(private http: HttpClient) {}
 
