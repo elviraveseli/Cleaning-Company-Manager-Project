@@ -38,9 +38,14 @@ export class EmailService {
   // Generate contract signature email template
   generateContractSignatureEmail(data: ContractEmailData): EmailTemplate {
     const { contract } = data;
-    const signatureUrl =
-      data.signatureUrl ||
-      `${window.location.origin}/contracts/${contract._id}/sign`;
+    
+    // Use environment-based URL for contract signing
+    // This ensures it works both in development and production (Render)
+    let baseUrl = environment.production 
+      ? 'https://cleaning-company-manager-frontend.onrender.com' // Frontend Render URL
+      : window.location.origin;
+    
+    const signatureUrl = data.signatureUrl || `${baseUrl}/contracts/${contract._id}/sign`;
 
     const subject = `Contract Signature Required - ${contract.contractNumber}`;
 
