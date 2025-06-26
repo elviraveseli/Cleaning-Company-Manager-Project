@@ -8,7 +8,7 @@ import { EmployeeContract } from '../models/employee-contract.model';
   providedIn: 'root'
 })
 export class EmployeeContractService {
-  private apiUrl = '/api/employee-contracts';
+  private apiUrl = '${environment.apiUrl}/employee-contracts';
   private contractsSubject = new BehaviorSubject<EmployeeContract[]>([]);
   contracts$ = this.contractsSubject.asObservable();
 
