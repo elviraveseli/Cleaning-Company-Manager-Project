@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { CustomerContract } from '../models/customer-contract.model';
 import { EmployeeContract } from '../models/employee-contract.model';
+import { environment } from 'src/environments/environment.prod';
 
 export interface EmailTemplate {
   to: string;
@@ -59,7 +60,7 @@ export class EmailService {
     // Call the backend API to send the actual email
     return this.http
       .post<any>(
-        `/api/employee-contracts/${contract._id}/send-email`,
+        `${environment.apiUrl}/employee-contracts/${contract._id}/send-email`,
         { employeeId: employee._id }
       )
       .pipe(
