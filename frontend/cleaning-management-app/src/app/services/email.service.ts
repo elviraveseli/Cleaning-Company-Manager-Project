@@ -152,56 +152,63 @@ export class EmailService {
     // Call the backend API to send the actual email
     return this.http
       .post<any>(
-        `http://localhost:3000/api/customer-contracts/${contract._id}/send-email`,
+        `${environment.apiUrl}/customer-contracts/${contract._id}/send-email`,
         {}
       )
       .pipe(
         map((response: any) => {
           if (response.success) {
-            const emailWindow = window.open(
-              '',
-              '_blank',
-              'width=800,height=600,scrollbars=yes'
-            );
-            if (emailWindow) {
-              if (response.demo) {
-                // Demo mode - show email preview
-                emailWindow.document.write(`
-                  <div style="padding: 20px; font-family: Arial, sans-serif;">
-                    <h2 style="color: #3b82f6;">📧 Email Preview (Demo Mode)</h2>
-                    <p><strong>To:</strong> ${response.emailInfo.to}</p>
-                    <p><strong>Subject:</strong> ${response.emailInfo.subject}</p>
-                    <p><strong>Contract:</strong> ${response.emailInfo.contractNumber}</p>
-                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                      <h3 style="margin-top: 0; color: #92400e;">🔧 Demo Mode Active</h3>
-                      <p>No email configuration found. This is a preview of what would be sent.</p>
-                      <p><strong>To send real emails:</strong> Configure your Gmail credentials in the backend .env file.</p>
-                    </div>
-                    <hr style="margin: 20px 0;">
-                    <h3>Email Content Preview:</h3>
-                    ${response.emailInfo.htmlContent}
-                  </div>
-                `);
-              } else {
-                // Real email sent
-                emailWindow.document.write(`
-                  <div style="padding: 20px; font-family: Arial, sans-serif;">
-                    <h2 style="color: #059669;">📧 Email Sent Successfully!</h2>
-                    <p><strong>To:</strong> ${response.emailInfo.to}</p>
-                    <p><strong>Subject:</strong> ${response.emailInfo.subject}</p>
-                    <p><strong>Contract:</strong> ${response.emailInfo.contractNumber}</p>
-                    <p><strong>Message ID:</strong> ${response.emailInfo.messageId}</p>
-                    <hr style="margin: 20px 0;">
-                    <h3>✅ Real Email Sent!</h3>
-                    <p>The contract signature email has been sent to the customer's email address using Nodemailer.</p>
-                    <p style="color: #6b7280; font-size: 14px;">
-                      <em>The customer will receive a professional email with all contract details and a digital signature link.</em>
-                    </p>
-                  </div>
-                `);
+            // Use setTimeout to defer window opening until after the current render cycle
+            setTimeout(() => {
+              try {
+                const emailWindow = window.open(
+                  '',
+                  '_blank',
+                  'width=800,height=600,scrollbars=yes'
+                );
+                if (emailWindow) {
+                  if (response.demo) {
+                    // Demo mode - show email preview
+                    emailWindow.document.write(`
+                      <div style="padding: 20px; font-family: Arial, sans-serif;">
+                        <h2 style="color: #3b82f6;">📧 Email Preview (Demo Mode)</h2>
+                        <p><strong>To:</strong> ${response.emailInfo.to}</p>
+                        <p><strong>Subject:</strong> ${response.emailInfo.subject}</p>
+                        <p><strong>Contract:</strong> ${response.emailInfo.contractNumber}</p>
+                        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                          <h3 style="margin-top: 0; color: #92400e;">🔧 Demo Mode Active</h3>
+                          <p>No email configuration found. This is a preview of what would be sent.</p>
+                          <p><strong>To send real emails:</strong> Configure your Gmail credentials in the backend .env file.</p>
+                        </div>
+                        <hr style="margin: 20px 0;">
+                        <h3>Email Content Preview:</h3>
+                        ${response.emailInfo.htmlContent}
+                      </div>
+                    `);
+                  } else {
+                    // Real email sent
+                    emailWindow.document.write(`
+                      <div style="padding: 20px; font-family: Arial, sans-serif;">
+                        <h2 style="color: #059669;">📧 Email Sent Successfully!</h2>
+                        <p><strong>To:</strong> ${response.emailInfo.to}</p>
+                        <p><strong>Subject:</strong> ${response.emailInfo.subject}</p>
+                        <p><strong>Contract:</strong> ${response.emailInfo.contractNumber}</p>
+                        <p><strong>Message ID:</strong> ${response.emailInfo.messageId}</p>
+                        <hr style="margin: 20px 0;">
+                        <h3>✅ Real Email Sent!</h3>
+                        <p>The contract signature email has been sent to the customer's email address using Nodemailer.</p>
+                        <p style="color: #6b7280; font-size: 14px;">
+                          <em>The customer will receive a professional email with all contract details and a digital signature link.</em>
+                        </p>
+                      </div>
+                    `);
+                  }
+                  emailWindow.document.close();
+                }
+              } catch (e) {
+                console.error('Error opening email preview window:', e);
               }
-              emailWindow.document.close();
-            }
+            }, 0);
             return true;
           }
           return false;
@@ -209,47 +216,60 @@ export class EmailService {
         catchError((error: any) => {
           console.error('Error sending email via backend:', error);
 
-          // Fallback: show preview if backend email fails
-          const emailData: ContractEmailData = {
-            contract,
-            companyName: this.companyInfo.name,
-            companyEmail: this.companyInfo.email,
-            companyPhone: this.companyInfo.phone,
-            companyAddress: this.companyInfo.address,
-          };
+          // Return an observable with error instead of throwing directly
+          return of(false).pipe(
+            map(() => {
+              // Use setTimeout to defer window opening until after the current render cycle
+              setTimeout(() => {
+                try {
+                  // Fallback: show preview if backend email fails
+                  const emailData: ContractEmailData = {
+                    contract,
+                    companyName: this.companyInfo.name,
+                    companyEmail: this.companyInfo.email,
+                    companyPhone: this.companyInfo.phone,
+                    companyAddress: this.companyInfo.address,
+                  };
 
-          const emailTemplate = this.generateContractSignatureEmail(emailData);
+                  const emailTemplate = this.generateContractSignatureEmail(emailData);
 
-          const emailWindow = window.open(
-            '',
-            '_blank',
-            'width=800,height=600,scrollbars=yes'
+                  const emailWindow = window.open(
+                    '',
+                    '_blank',
+                    'width=800,height=600,scrollbars=yes'
+                  );
+                  if (emailWindow) {
+                    emailWindow.document.write(`
+                      <div style="padding: 20px; font-family: Arial, sans-serif;">
+                        <h2 style="color: #dc2626;">⚠️ Email Service Error</h2>
+                        <p><strong>Error:</strong> ${
+                          error.error?.message ||
+                          error.message ||
+                          'Failed to send email'
+                        }</p>
+                        <hr style="margin: 20px 0;">
+                        <h3>Email Preview (What would have been sent):</h3>
+                        <p><strong>To:</strong> ${emailTemplate.to}</p>
+                        <p><strong>Subject:</strong> ${emailTemplate.subject}</p>
+                        <hr style="margin: 20px 0;">
+                        ${emailTemplate.htmlContent}
+                        <hr style="margin: 20px 0;">
+                        <p style="color: #6b7280; font-size: 14px;">
+                          <em>Please check your email configuration in the backend .env file.</em>
+                        </p>
+                      </div>
+                    `);
+                    emailWindow.document.close();
+                  }
+                } catch (e) {
+                  console.error('Error opening error preview window:', e);
+                }
+              }, 0);
+              
+              // Throw a more descriptive error for the component to handle
+              throw new Error('Failed to send email. Check console for details.');
+            })
           );
-          if (emailWindow) {
-            emailWindow.document.write(`
-              <div style="padding: 20px; font-family: Arial, sans-serif;">
-                <h2 style="color: #dc2626;">⚠️ Email Service Error</h2>
-                <p><strong>Error:</strong> ${
-                  error.error?.message ||
-                  error.message ||
-                  'Failed to send email'
-                }</p>
-                <hr style="margin: 20px 0;">
-                <h3>Email Preview (What would have been sent):</h3>
-                <p><strong>To:</strong> ${emailTemplate.to}</p>
-                <p><strong>Subject:</strong> ${emailTemplate.subject}</p>
-                <hr style="margin: 20px 0;">
-                ${emailTemplate.htmlContent}
-                <hr style="margin: 20px 0;">
-                <p style="color: #6b7280; font-size: 14px;">
-                  <em>Please check your email configuration in the backend .env file.</em>
-                </p>
-              </div>
-            `);
-            emailWindow.document.close();
-          }
-
-          throw error;
         })
       );
   }
