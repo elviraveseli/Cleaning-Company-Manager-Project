@@ -9,7 +9,7 @@ const Object = require("../models/Object");
 exports.getSchedules = async (req, res) => {
   try {
      page = parseInt(req.query.pag) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+   limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const [schedules, total] = await Promise.all([
