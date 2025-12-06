@@ -6,7 +6,7 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all schedules
-exports.getSchedules = async (req, res) => {
+exports.getSchedules = asssync (req, res) => {
   try {
      co page = parseInt(req.query.pag) || 1;
    limit = parseInt(req.query.limit) || 20;
