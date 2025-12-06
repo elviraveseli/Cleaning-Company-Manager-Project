@@ -10,7 +10,7 @@ exports.getSchedules = asssync (req, res) => {
   try {
    page = parseInt(req.query.pag) || 1;
    limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;jj
 
     const [schedules, total] = await Promise.all([
       Schedule.find()
