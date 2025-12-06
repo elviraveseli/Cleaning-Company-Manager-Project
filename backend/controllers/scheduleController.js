@@ -89,6 +89,7 @@ function calculateDuration(startTime, endTime) {
 }
 
 // Helper function to check if two time periods overlap
+// Helper function to check if two time periods overlap
 function timePeriodsOverlap(start1, end1, start2, end2) {
   // Convert time strings to minutes since midnight
   const getMinutes = (timeStr) => {
@@ -104,6 +105,7 @@ function timePeriodsOverlap(start1, end1, start2, end2) {
   // Check if periods overlap
   return start1Minutes < end2Minutes && start2Minutes < end1Minutes;
 }
+
 
 // Helper function to check for employee scheduling conflicts
 async function checkEmployeeConflicts(
