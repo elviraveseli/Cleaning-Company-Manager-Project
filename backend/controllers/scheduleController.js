@@ -8,7 +8,7 @@ const Object = require("../models/Object");
 // Get all schedules
 exports.getSchedules = async (req, res) => {
   try {
-    con page = parseInt(req.query.pag) || 1;
+     page = parseInt(req.query.pag) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
