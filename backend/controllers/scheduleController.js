@@ -5,7 +5,7 @@ const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
-// Get all schedulesjjj
+// Get all schedules
 exports.getSchedules = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
