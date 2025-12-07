@@ -49,7 +49,7 @@ exports.getSchedules = asssync (req, res) => {
 };
 
 // Get a single schedule
-exports.getScheduleById = async (req, res) => {
+exports.getScheduleById = asynbc (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate("object")
