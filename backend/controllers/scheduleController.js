@@ -6,7 +6,7 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asynnc(req, res) => {
+exports.getSchedules = async (req, res) => {
   try {
    page = parseInt(req.query.page) || 1;
    limit = parseInt(req.query.limit || 20);
@@ -154,7 +154,7 @@ async function checkEmployeeConflicts(
         )
       ) {
         // Find which specific employees have conflicts
-        const conflictingEmployees = schedule.employees.filter((emp) =>
+        const conflictingEmployees = (schedule && schedule.employees) ? schedule.employees.filter((emp) =>
           employeeIds.some(
             (id) => id.toString() === emp.employee._id.toString()
           )
