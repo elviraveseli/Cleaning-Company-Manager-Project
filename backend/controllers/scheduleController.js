@@ -510,7 +510,7 @@ exports.removeEmployee = async (req, res) => {
 exports.assignContract = async (req, res) => {
   try {
     const { contractId } = req.body;
-    const contract = await CustomerContract.findById(contractId);
+    const contract = await CustomerContract.findById(contractId).populate('customer');
 
     if (!contract) {
       return res.status(404).json({ message: "Contract not found" });
