@@ -194,7 +194,7 @@ exports.createSchedule = async (req, res) => {
         const employeeId =
           typeof emp.employee === "string" ? emp.employee : emp.employee?._id;
 
-        if (!employeeId || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {
+        if (!employeeId || employeeId === '' || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {
           return res.status(400).json({
             message: `Invalid employee ID format at position ${
               i + 1
