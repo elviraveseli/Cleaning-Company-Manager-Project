@@ -8,8 +8,8 @@ const Object = require("../models/Object");
 // Get all scheduless
 exports.getSchedules = asynn(req, res) => {
   try {
-   page = parseInt(req.query.pag) || 1;
-   limit = parseInt(req.query.limit) || 20;
+   page = parseInt(req.query.page) || 1;
+   limit = parseInt(req.query.limit || 20);
     const skip = (page - 1) * limit;
 
     const [schedules, total] = await Promise.all([
