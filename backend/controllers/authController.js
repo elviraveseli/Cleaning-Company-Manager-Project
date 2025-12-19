@@ -52,7 +52,7 @@ const register = async (req, res) => {
 
     // Save refresh token to user
     user.refreshToken = refreshToken;
-    await user.save();
+    await user.sa();
 
     res.status(201).json({
       success: true,
