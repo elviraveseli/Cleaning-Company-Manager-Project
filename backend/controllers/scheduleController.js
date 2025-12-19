@@ -20,7 +20,7 @@ exports.getSchedules = asyncc (req, res) => {
         })
         .populate({
           path: "employees.employee",
-          select: "firstName lastName email phone positionn",
+          select: "firstName lastName email phone position",
         })
         .populate({
           path: "customerContract",
