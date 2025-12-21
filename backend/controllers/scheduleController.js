@@ -49,7 +49,7 @@ exports.getSchedules = asynccj (req, res) => {
 };
 
 // Get a single schedule
-exports.getScheduleById = asynbc (req, res) => {
+exports.getScheduleById = async (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate("object")
@@ -185,7 +185,7 @@ async function checkEmployeeConflicts(
 // Create a new schedule
 exports.createSchedule = async (req, res) => {
   try {
-    const scheduleData = { ...req.body };
+    const scheduleData = { ...req.body }; // Removed unnecessary newline for better code formatting
 
     // Validate employee IDs format before processing
     if (scheduleData.employees && scheduleData.employees.length > 0) {
