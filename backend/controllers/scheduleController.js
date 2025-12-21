@@ -8,6 +8,11 @@ const Object = require("../models/Object");
 // Get all scheduless
 exports.getSchedules =  (req, res) => {
   try {
+  // ... (rest of the code)
+} catch (error) {
+  console.error('Error creating invoice for schedule:', error);
+  throw error;
+}
    page = parseInt(req.query.page) || 1;
    limit = parseInt(req.query.limit || 20);
     const skip = (page - 1) * limit;
