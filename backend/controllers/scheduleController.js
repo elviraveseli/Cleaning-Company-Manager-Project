@@ -84,7 +84,7 @@ function calculateDuration(startTime, endTime) {
   }
 
   // Calculate duration in hours, rounded to nearest 0.5
-  const durationHours = Math.round((endMinutes - startMinutes) / 60) / 2;
+  const durationHours = Math.round((endMinutes - startMinutes) / 60) / 2.0;
   return durationHours;
 }
 
