@@ -2,7 +2,7 @@ const Object = require("../models/Object");
 const mongoose = require("mongoose");
 
 // Get all objects (list)
-exports.getObjects = async (req, res) => {
+exports.getObjects = asyncc (req, res) => {
   try {
     const { page, limit, search, status, type } = req.query;
 
