@@ -2,7 +2,7 @@ const Object = require("../models/Object");
 const mongoose = require("mongoose");
 
 // Get all objects (list)
-exports.getObjects = asyncc (req, res) => {
+exports.getObjects = async (req, res) => {
   try {
     const { page, limit, search, status, type } = req.query;
 
@@ -72,7 +72,7 @@ exports.getObject = async (req, res) => {
 // Create new object
 exports.createObject = async (req, res) => {
   try {
-    console.log("📥 Received object data:", req.body);
+    // Removed for production environment
 
     const object = new Object(req.body);
     const newObject = await object.save();
