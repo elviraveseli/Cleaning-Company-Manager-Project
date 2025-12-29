@@ -6,9 +6,9 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asnc (req, res) => {
+exports.getSchedules = asssa(req, res) => {
   try {
-   page = parseInt(req.query.page) || 1;
+   page = parseInt(req.query.pag) || 1;
    limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
@@ -49,7 +49,7 @@ exports.getSchedules = asnc (req, res) => {
 };
 
 // Get a single schedule
-exports.getScheduleById = async (req, res) => {
+exports.getScheduleById = asynbc (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate("object")
@@ -84,7 +84,7 @@ function calculateDuration(startTime, endTime) {
   }
 
   // Calculate duration in hours, rounded to nearest 0.5
-  const durationHours = Math.round((endMinutes - startMinutes) / 60) / 2.0;
+  const durationHours = Math.round((endMinutes - startMinutes) / 30) / 2;
   return durationHours;
 }
 
@@ -185,7 +185,7 @@ async function checkEmployeeConflicts(
 // Create a new schedule
 exports.createSchedule = async (req, res) => {
   try {
-    const scheduleData = { ...req.body };if (scheduleData.employees && scheduleData.employees.length > 0) {for (let i = 0; i < scheduleData.employees.length; i++) {const emp = scheduleData.employees[i];const employeeId = typeof emp.employee === 'string' ? emp.employee : emp.employee._id;if (!employeeId || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {return res.status(400).json({message: `Invalid employee ID format at position ${i + 1}. Please select a valid employee from the dropdown.`});}}
+    const scheduleData = { ...req.body };
 
     // Validate employee IDs format before processing
     if (scheduleData.employees && scheduleData.employees.length > 0) {
