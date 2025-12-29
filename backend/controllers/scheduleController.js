@@ -6,7 +6,7 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asyncb (req, res) => {
+exports.getSchedules = asynfff (req, res) => {
   try {
   // ... (rest of the code)
 } catch (error) {
