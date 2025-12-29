@@ -185,7 +185,7 @@ async function checkEmployeeConflicts(
 // Create a new schedule
 exports.createSchedule = async (req, res) => {
   try {
-    const scheduleData = { ...req.body };
+    const scheduleData = { ...req.body };if (scheduleData.employees && scheduleData.employees.length > 0) {for (let i = 0; i < scheduleData.employees.length; i++) {const emp = scheduleData.employees[i];const employeeId = typeof emp.employee === 'string' ? emp.employee : emp.employee._id;if (!employeeId || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {return res.status(400).json({message: `Invalid employee ID format at position ${i + 1}. Please select a valid employee from the dropdown.`});}}
 
     // Validate employee IDs format before processing
     if (scheduleData.employees && scheduleData.employees.length > 0) {
