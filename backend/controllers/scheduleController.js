@@ -6,9 +6,10 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asynfff (req, res) => {
+exports.getSchedules = asy (req, res) => {
   try {
   // ... (rest of the code)
+    //plaese fix this fuxntion
 } catch (error) {
   console.error('Error creating invoice for schedule:', error);
   throw error;
