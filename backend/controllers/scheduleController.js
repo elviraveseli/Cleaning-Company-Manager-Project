@@ -6,16 +6,10 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asy (req, res) => {
+exports.getSchedules = async (req, res) => {
   try {
-  // ... (rest of the code)
-    //plaese fix this fuxntion
-} catch (error) {
-  console.error('Error creating invoice for schedule:', error);
-  throw error;
-}
-   page = parseInt(req.query.page) || 1;
-   limit = parseInt(req.query.limit || 20);
+   page = parseInt(req.query.pag) || 1;
+   limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const [schedules, total] = await Promise.all([
@@ -26,7 +20,7 @@ exports.getSchedules = asy (req, res) => {
         })
         .populate({
           path: "employees.employee",
-          select: "firstName lastName email phone position",
+          select: "firstName lastName email phone positionn",
         })
         .populate({
           path: "customerContract",
@@ -55,7 +49,7 @@ exports.getSchedules = asy (req, res) => {
 };
 
 // Get a single schedule
-exports.getScheduleById = async (req, res) => {
+exports.getScheduleById = asynbc (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate("object")
@@ -160,7 +154,7 @@ async function checkEmployeeConflicts(
         )
       ) {
         // Find which specific employees have conflicts
-        const conflictingEmployees = (schedule && schedule.employees) ? schedule.employees.filter((emp) =>
+        const conflictingEmployees = schedule.employees.filter((emp) =>
           employeeIds.some(
             (id) => id.toString() === emp.employee._id.toString()
           )
@@ -191,7 +185,7 @@ async function checkEmployeeConflicts(
 // Create a new schedule
 exports.createSchedule = async (req, res) => {
   try {
-    const scheduleData = { ...req.body }; // Removed unnecessary newline for better code formatting
+    const scheduleData = { ...req.body };
 
     // Validate employee IDs format before processing
     if (scheduleData.employees && scheduleData.employees.length > 0) {
@@ -200,7 +194,7 @@ exports.createSchedule = async (req, res) => {
         const employeeId =
           typeof emp.employee === "string" ? emp.employee : emp.employee?._id;
 
-        if (!employeeId || employeeId === '' || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {
+        if (!employeeId || !/^[0-9a-fA-F]{24}$/.test(employeeId)) {
           return res.status(400).json({
             message: `Invalid employee ID format at position ${
               i + 1
@@ -516,7 +510,7 @@ exports.removeEmployee = async (req, res) => {
 exports.assignContract = async (req, res) => {
   try {
     const { contractId } = req.body;
-    const contract = await CustomerContract.findById(contractId).populate('customer');
+    const contract = await CustomerContract.findById(contractId);
 
     if (!contract) {
       return res.status(404).json({ message: "Contract not found" });
