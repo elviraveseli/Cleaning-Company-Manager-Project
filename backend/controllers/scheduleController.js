@@ -6,7 +6,7 @@ const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
 // Get all scheduless
-exports.getSchedules = asyncc (req, res) => {
+exports.getSchedules = async (req, res) => {
   try {
    page = parseInt(req.query.pag) || 1;
    limit = parseInt(req.query.limit) || 20;
@@ -49,7 +49,7 @@ exports.getSchedules = asyncc (req, res) => {
 };
 
 // Get a single schedule
-exports.getScheduleById = asynbc (req, res) => {
+exports.getScheduleById = async (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate("object")
@@ -84,7 +84,7 @@ function calculateDuration(startTime, endTime) {
   }
 
   // Calculate duration in hours, rounded to nearest 0.5
-  const durationHours = Math.round((endMinutes - startMinutes) / 30) / 2;
+  const durationHours = Math.round((endMinutes - startMinutes) / 60) / 2;
   return durationHours;
 }
 
