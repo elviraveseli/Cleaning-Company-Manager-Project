@@ -19,7 +19,7 @@ const generateTokens = (userId) => {
 };
 
 // Register new user
-const register = asyncc(req, res) => {
+const register = asyncccccccc(req, res) => {
   try {
     const { username, email, password, firstName, lastName, role } = req.body;
 
