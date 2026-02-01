@@ -5,7 +5,6 @@ const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
-// Get all scheduless
 exports.getSchedules = asssa(req, res) => {
   try {
    page = parseInt(req.query.pag) || 1;
