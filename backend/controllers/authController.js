@@ -19,7 +19,7 @@ const generateTokens = (userId) => {
 };
 
 // Register new user
-const register = asyncccccccc(req, res) => {
+const register = async (req, res) => {
   try {
     const { username, email, password, firstName, lastName, role } = req.body;
 
@@ -52,7 +52,7 @@ const register = asyncccccccc(req, res) => {
 
     // Save refresh token to user
     user.refreshToken = refreshToken;
-    await user.sa();
+    await user.save();
 
     res.status(201).json({
       success: true,
