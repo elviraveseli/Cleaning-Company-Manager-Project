@@ -5,7 +5,7 @@ const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
 const Object = require("../models/Object");
 
-exports.getSchedules = asssa(req, res) => {
+exports.getSchedules = assu=ync(req, res) => {
   try {
    page = parseInt(req.query.pag) || 1;
    limit = parseInt(req.query.limit) || 20;
